@@ -1829,7 +1829,9 @@ function animHero(dt){
   if(s==='storm'){aR.sh.rotation.set(-2.75,0,.25);aR.el.rotation.x=-.15;aL.sh.rotation.set(-.35,0,-.45);aL.el.rotation.x=-.9;h.body.rotation.x=-.08;}
   if(s==='airstrike'){aL.sh.rotation.set(-2.9,0,-.1);aL.el.rotation.x=-.1;}
   if(s==='cast'){if(P.castKind==='swords'){aR.sh.rotation.set(-2.95,0,.1);aR.el.rotation.x=-.05;aL.sh.rotation.set(-2.6,0,-.3);}else{const k=clamp(P.t/.3,0,1);aR.sh.rotation.set(lerp(-2.8,-.7,k),0,.2);aL.sh.rotation.set(lerp(-2.8,-.7,k),0,-.2);h.body.rotation.x=lerp(-.2,.45,k);L.knee.rotation.x=Rl.knee.rotation.x=.6*k;h.body.position.y=-.25*k;}}
-  {const ki=curBlade().children[0];ki.rotation.x=lerp(ki.rotation.x,(s==='sw'||s==='shadow')?.12:(W().id==='scythe'?.4:1.1),Math.min(1,dt*16));}
+  const guard=s==='move'&&!isGun()&&W().id!=='flail';
+  if(guard){aR.sh.rotation.set(-.38+sw*.15,0,.16);aR.el.rotation.x=-1.2;}
+  {const ki=curBlade().children[0];ki.rotation.x=lerp(ki.rotation.x,(s==='sw'||s==='shadow')?.12:guard?(W().id==='scythe'?-.15:-.55):(W().id==='scythe'?.4:1.1),Math.min(1,dt*16));}
   if(isGun()&&(s==='move')){const rk=(P.recoil||0)*.12;
     if(P.aiming){aR.sh.rotation.set(-1.52+rk,0,-.22);aR.el.rotation.x=-.04;
       if(W().id==='rifle'){aL.sh.rotation.set(-1.25,0,.5);aL.el.rotation.x=-.55;}else{aL.sh.rotation.set(-1.52+rk*.5,0,.22);aL.el.rotation.x=-.04;}}
