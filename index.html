@@ -196,6 +196,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
       <div class="srow"><span>Qahramon</span><div class="seg" data-k="hero"><button data-v="ninja">Ninja</button><button data-v="valkyrie">Valk.</button><button data-v="warlord">Sark.</button><button data-v="nova">Nova</button><button data-v="bride">Malika</button><button data-v="soldier">Askar</button><button data-v="viking">Viking</button></div></div>
       <div class="srow"><span>Grafika</span><div class="seg" data-k="q"><button data-v="auto">Avto</button><button data-v="low">Past</button><button data-v="mid">O'rta</button><button data-v="high">Yuqori</button></div></div>
       <div class="srow"><span>FPS chegarasi</span><div class="seg" data-k="fps"><button data-v="30">30</button><button data-v="60">60</button><button data-v="120">120</button><button data-v="144">144</button><button data-v="0">MAX</button></div></div>
+      <div class="srow"><span>Kamera</span><div class="seg" data-k="cam"><button data-v="near">Yaqin</button><button data-v="mid">O'rta</button><button data-v="rts">Baland</button></div></div>
       <div class="srow"><span>Ekran silkinishi</span><div class="seg" data-k="sh"><button data-v="0">O'chiq</button><button data-v="0.5">50%</button><button data-v="1">100%</button><button data-v="1.5">150%</button></div></div>
       <div class="srow"><span>FPS ko'rsatish</span><div class="seg" data-k="show"><button data-v="1">Ha</button><button data-v="0">Yo'q</button></div></div>
       <div id="hzinfo"></div>
@@ -272,7 +273,7 @@ const camera=new THREE.PerspectiveCamera(48,1,0.1,240);
 const hemi=FOR?new THREE.HemisphereLight(0xa8c8ff,0x3a4a22,1.25):new THREE.HemisphereLight(0x8c88b0,0x3a2414,.95);scene.add(hemi);
 const sun=new THREE.DirectionalLight(FOR?0xffe2b8:0xffc29a,FOR?3.0:2.3);
 sun.position.set(18,34,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
-{const c=sun.shadow.camera;c.left=-26;c.right=26;c.top=26;c.bottom=-26;c.near=1;c.far=100;}
+{const c=sun.shadow.camera;c.left=-34;c.right=34;c.top=34;c.bottom=-34;c.near=1;c.far=100;}
 sun.shadow.bias=-0.0005;sun.shadow.normalBias=0.03;sun.shadow.radius=3;
 scene.add(sun,sun.target);
 // cool rim light for silhouettes
@@ -1588,6 +1589,7 @@ const P={pos:new V3(),vel:new V3(),face:0,hp:100,maxHp:100,rage:0,state:'move',t
 const buf={attack:0,spin:0,dodge:0,special:0};
 const held={attack:false};
 let score=0,wave=0,kills=0,comboCount=0,comboT=0;
+const CAM_PRESETS={near:[9.6,8.2],mid:[12.6,8.8],rts:[16,9.4]};let camMode='rts',camZoom=1;
 let running=false,paused=false,hitStop=0,shake=0,timeNow=0,shakeMul=1,kickX=0,kickZ=0,zoomPunch=0,shakeT=0;
 function kick(dx,dz,a){const l=Math.hypot(dx,dz)||1;kickX+=dx/l*a;kickZ+=dz/l*a;}
 
@@ -1991,8 +1993,8 @@ function updCam(dt,title){
     const hh=lobbyHeight(),R_=hh*(narrow?3.1:2.45),bob=Math.sin(timeNow*.6)*hh*.025;
     camTarget.set(Math.sin(.12)*R_,hh*.62+bob,Math.cos(.12)*R_);camera.position.lerp(camTarget,1-Math.exp(-dt*3));
     camLook.lerp(_p.set(0,hh*.5,0),1-Math.exp(-dt*4));camera.lookAt(camLook);return;}
-  const k=portrait?1.5:1;
-  camTarget.set(P.pos.x,P.pos.y*.3+9.6*k,P.pos.z+8.2*k);
+  const k=(portrait?1.45:1)*camZoom,CP=CAM_PRESETS[camMode]||CAM_PRESETS.rts;
+  camTarget.set(P.pos.x,P.pos.y*.3+CP[0]*k,P.pos.z+CP[1]*k);
   camera.position.lerp(camTarget,1-Math.exp(-dt*6));
   camLook.lerp(_p.set(P.pos.x,1.2+P.y*.3,P.pos.z),1-Math.exp(-dt*10));
   camera.lookAt(camLook);
@@ -2142,20 +2144,22 @@ mountWeapons(hero);refreshHeroCards();
 // ================= SETTINGS =================
 const fpsEl=$('fps');
 function loadSet(){try{return JSON.parse(localStorage.getItem('zb_set')||'{}');}catch(e){return {};}}
-function saveSet(){try{localStorage.setItem('zb_set',JSON.stringify({q:qualitySetting,fps:fpsLimit,show:showFps,hero:heroChoice,sh:shakeMul}));}catch(e){}}
+function saveSet(){try{localStorage.setItem('zb_set',JSON.stringify({q:qualitySetting,fps:fpsLimit,show:showFps,hero:heroChoice,sh:shakeMul,cam:camMode}));}catch(e){}}
 function updHzInfo(){const el=$('hzinfo');if(!el)return;el.textContent=screenHz?`Ekraningiz ~${screenHz} Hz. O'yin bundan tez chiqara olmaydi.`:'';}
-function refreshSeg(){document.querySelectorAll('.seg').forEach(sg=>{const k=sg.dataset.k;const cur=k==='q'?qualitySetting:k==='fps'?String(fpsLimit):k==='hero'?heroChoice:k==='map'?MAP:k==='sh'?String(shakeMul):(showFps?'1':'0');
+function refreshSeg(){document.querySelectorAll('.seg').forEach(sg=>{const k=sg.dataset.k;const cur=k==='q'?qualitySetting:k==='fps'?String(fpsLimit):k==='hero'?heroChoice:k==='map'?MAP:k==='sh'?String(shakeMul):k==='cam'?camMode:(showFps?'1':'0');
   sg.querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.v===cur));});
   fpsEl.style.display=showFps?'block':'none';}
 document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const k=b.parentElement.dataset.k,v=b.dataset.v;
   if(k==='q'){qualitySetting=v;applyQuality(v==='auto'?'high':v);perfWait=4;}
   else if(k==='fps'){fpsLimit=+v;}
   else if(k==='hero'){setHero(v);}
+  else if(k==='cam'){camMode=v;camZoom=1;}
   else if(k==='sh'){shakeMul=+v;if(shakeMul>0)shake=Math.max(shake,.35);}
   else if(k==='map'){if(v!==MAP){try{localStorage.setItem('zb_map',v);}catch(e){}location.hash=v;location.reload();}return;}
   else showFps=v==='1';
   refreshSeg();saveSet();}));
 function mountSettings(id){$(id).querySelector('.panel').appendChild($('settings'));}
+addEventListener('wheel',e=>{if(!running||paused)return;camZoom=Math.min(1.35,Math.max(.6,camZoom*(e.deltaY>0?1.08:1/1.08)));},{passive:true});
 // ================= LOBBI =================
 const HERO_ORDER=[...document.querySelectorAll('.hcard')].map(c=>c.dataset.h);
 const HERO_INFO={};document.querySelectorAll('.hcard').forEach(c=>HERO_INFO[c.dataset.h]=c.querySelector('i').textContent);
@@ -2195,7 +2199,7 @@ function backToLobby(){running=false;paused=false;resetGame();$('over').classLis
 $('lobbyBtn1').onclick=backToLobby;$('lobbyBtn2').onclick=backToLobby;
 buildWpnList();refreshLobby();
 
-{const st=loadSet();if(st.q)qualitySetting=st.q;if(st.fps!==undefined)fpsLimit=st.fps;if(st.show!==undefined)showFps=st.show;if(st.hero)heroChoice=st.hero;if(st.sh!==undefined)shakeMul=st.sh;}
+{const st=loadSet();if(st.q)qualitySetting=st.q;if(st.fps!==undefined)fpsLimit=st.fps;if(st.show!==undefined)showFps=st.show;if(st.hero)heroChoice=st.hero;if(st.sh!==undefined)shakeMul=st.sh;if(st.cam&&CAM_PRESETS[st.cam])camMode=st.cam;}
 applyQuality(qualitySetting==='auto'?'high':qualitySetting);refreshSeg();
 requestAnimationFrame(frame);
 $('goBtn').disabled=false;$('goBtn').textContent='JANGNI BOSHLASH';
