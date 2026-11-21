@@ -920,6 +920,7 @@ function autoWeights(geo,S_,o){
     for(const s of S_){const [bi,ax,ay,bx,by,r,sd,k]=s;
       if(k==='l'&&(y>o.legY||(sd*x< -.03)))continue;
       if(k==='a'&&(sd*x<o.armX||y<o.armYmin))continue;
+      if(o.onlyX&&(k==='b'||k==='h')&&Math.abs(x)>o.onlyX&&y>o.onlyY)continue;
       const vx=bx-ax,vy=by-ay;let t=((x-ax)*vx+(y-ay)*vy)/(vx*vx+vy*vy);t=clamp(t,0,1);
       ws.push([bi,Math.exp(-Math.max(0,Math.hypot(ax+vx*t-x,ay+vy*t-y)-r)/.045)]);}
     ws.sort((a,b)=>b[1]-a[1]);let tot=0;for(let j=0;j<4&&j<ws.length;j++)tot+=ws[j][1];
@@ -1009,7 +1010,10 @@ function makeTHero(gs,c){
   const S_=[[0,0,c.hipY-.1,0,c.shY+.05,c.torsoR,0,'b'],[5,0,c.headY-.02,0,c.headY+.42,.15,0,'h']];
   [-1,1].forEach((sd,i)=>{const hb=1+i*2;S_.push([hb,sd*c.hipX,c.hipY,sd*c.hipX,c.kneeY,.1,sd,'l'],[hb+1,sd*c.hipX,c.kneeY,sd*c.hipX,0,.09,sd,'l']);
     const ab=6+i*3;S_.push([ab,sd*c.shX,c.shY,sd*c.elX,c.shY,c.armR,sd,'a'],[ab+1,sd*c.elX,c.shY,sd*c.handX,c.shY,c.armR*.85,sd,'a'],[ab+2,sd*c.handX,c.shY,sd*(c.handX+.09),c.shY,c.armR*.7,sd,'a']);});
-  autoWeights(geo,S_,{legY:c.legY,armX:c.armX,armYmin:c.armYmin});
+  // keng yenglarni qo'lga yopishtirish (T-pozada yenglar qo'ldan pastga osilgan)
+  if(c.sleeve){const q=c.sleeve,pa=geo.attributes.position;for(let i=0;i<pa.count;i++){const ax=Math.abs(pa.getX(i)),y=pa.getY(i);
+    if((ax>q.x0||(ax>q.x1&&y>q.y1))&&y<q.y2)pa.setY(i,q.ay+(y-q.ay)*q.k);}pa.needsUpdate=true;}
+  autoWeights(geo,S_,{legY:c.legY,armX:c.armX,armYmin:c.armYmin,onlyX:c.sleeve&&c.sleeve.onlyX,onlyY:c.sleeve&&c.sleeve.onlyY});
   const mesh=new THREE.SkinnedMesh(geo,c.mat);mesh.castShadow=true;mesh.frustumCulled=false;mesh.add(body);
   mesh.updateMatrixWorld(true);mesh.bind(new THREE.Skeleton(bones));
   // bake arms down into the rest pose (no T-pose at runtime)
@@ -1027,7 +1031,7 @@ const HERO_CFG={
   ninja:{file:'ninja.js',v:'NINJA_B64',kind:'A',title:'NINJA',mat:heroMat(0x2c3038,{metalness:.6,roughness:.36}),hipX:.26,hipY:1.08,kneeY:.55,headY:2.0,shY:1.85,torsoR:.26,armX:.3,armYmin:.65,
     arm:[[[-.4,1.85],[-.5,1.35],[-.55,.88],[-.58,.72]],[[.4,1.85],[.48,1.4],[.47,1.1],[.47,.96]]]},
   nova:{file:'nova.js',v:'NOVA_B64',kind:'T',title:'NOVA',mat:heroMat(0x3d4656,{metalness:.55,roughness:.36}),hipX:.14,hipY:1.0,kneeY:.58,headY:1.95,shY:1.82,shX:.3,elX:.6,handX:.87,torsoR:.2,armR:.07,legY:1.1,armX:.24,armYmin:1.5,down:PI/2-.12},
-  bride:{file:'bride.js',v:'BRIDE_B64',kind:'T',title:'MALIKA',mat:heroMat(0xf1ebe2,{metalness:.05,roughness:.45}),hipX:.12,hipY:.9,kneeY:.45,headY:2.1,shY:1.84,shX:.3,elX:.6,handX:.9,torsoR:.24,armR:.12,legY:.42,armX:.27,armYmin:.85,down:1.2,legAmp:.3},
+  bride:{file:'bride.js',v:'BRIDE_B64',kind:'T',title:'MALIKA',mat:heroMat(0xf1ebe2,{metalness:.05,roughness:.45}),hipX:.12,hipY:.9,kneeY:.45,headY:2.1,shY:1.84,shX:.3,elX:.6,handX:.9,torsoR:.24,armR:.12,legY:.42,armX:.27,down:1.2,legAmp:.3,armYmin:1.45,sleeve:{x0:.5,x1:.38,y1:1.3,y2:1.95,ay:1.9,k:.3,onlyX:.42,onlyY:1.5}},
 };
 
 // ---- v8: textured Tripo heroes (normalized at load) ----
