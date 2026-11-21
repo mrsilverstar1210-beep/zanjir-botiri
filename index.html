@@ -992,7 +992,7 @@ function makeBiped(gs,c){
   const head=mkB(body,0,c.headY,0);
   const S_=[[0,0,c.hipY-.15,0,c.shY+.05,c.torsoR,0,'b'],[5,0,c.headY-.05,0,c.headY+.45,.2,0,'h']];
   [-1,1].forEach((sd,i)=>{const hb=1+i*2;S_.push([hb,sd*c.hipX,c.hipY,sd*c.hipX,c.kneeY,.14,sd,'l'],[hb+1,sd*c.hipX,c.kneeY,sd*c.hipX,0,.12,sd,'l']);});
-  [-1,1].forEach((sd,i)=>{const A=c.arm[i];const sh=mkB(body,A[0][0],A[0][1],0);const el=mkB(sh,A[1][0]-A[0][0],A[1][1]-A[0][1],0);const hand=mkB(el,A[2][0]-A[1][0],A[2][1]-A[1][1],0);arms.push({sh,el,hand});
+  [-1,1].forEach((sd,i)=>{const A=c.arm[i];const sh=mkB(body,A[0][0],A[0][1],0);const el=mkB(sh,A[1][0]-A[0][0],A[1][1]-A[0][1],0);const hand=mkB(el,A[2][0]-A[1][0],A[2][1]-A[1][1],0);arms.push({sh,el,hand,grip:new V3(A[3][0]-A[2][0],A[3][1]-A[2][1],0)});
     const ab=6+i*3;S_.push([ab,A[0][0],A[0][1],A[1][0],A[1][1],.11,sd,'a'],[ab+1,A[1][0],A[1][1],A[2][0],A[2][1],.1,sd,'a'],[ab+2,A[2][0],A[2][1],A[3][0],A[3][1],.1,sd,'a']);});
   autoWeights(geo,S_,{legY:c.hipY+.08,armX:c.armX,armYmin:c.armYmin});
   const mesh=new THREE.SkinnedMesh(geo,c.mat);mesh.castShadow=true;mesh.frustumCulled=false;mesh.add(body);mesh.bind(new THREE.Skeleton(bones));
@@ -1021,7 +1021,7 @@ function makeTHero(gs,c){
   for(const r of real){r.rs.quaternion.identity();r.re.position.applyQuaternion(r.qd);r.rh.position.applyQuaternion(r.qd);}
   mesh.updateMatrixWorld(true);mesh.bind(new THREE.Skeleton(bones));
   const root=new THREE.Group();root.add(mesh);const capeP=new THREE.Object3D();body.add(capeP);
-  return {root,body,legs,arms:real.map(r=>({sh:r.rs,el:r.re,hand:r.rh})),head,tip:new THREE.Object3D(),capeP,title:c.title,legAmp:c.legAmp||1};
+  return {root,body,legs,arms:real.map(r=>({sh:r.rs,el:r.re,hand:r.rh,grip:new V3(r.sd*.09,0,0).applyQuaternion(r.qd)})),head,tip:new THREE.Object3D(),capeP,title:c.title,legAmp:c.legAmp||1};
 }
 const HERO_CFG={
   ninja:{file:'ninja.js',v:'NINJA_B64',kind:'A',title:'NINJA',mat:heroMat(0x2c3038,{metalness:.6,roughness:.36}),hipX:.26,hipY:1.08,kneeY:.55,headY:2.0,shY:1.85,torsoR:.26,armX:.3,armYmin:.65,
@@ -1253,10 +1253,20 @@ const flailHandle=new THREE.Group();
 {mk2(new THREE.CylinderGeometry(.045,.05,.5,10),M(0x4a2e18,{flatShading:false}),0,0,.12,flailHandle).rotation.x=PI/2;
  mk2(new THREE.SphereGeometry(.075,10,8),darkM2,0,0,-.15,flailHandle);
  const t=new THREE.Object3D();t.position.set(0,0,.42);flailHandle.add(t);flailHandle.userData.tip=t;}
+// qurol dastasini ko'rinadigan musht markaziga qo'yish: qo'l suyagiga bog'langan vertekslar markazi
+function heroGrip(h){
+  if(h._grip)return h._grip;const hand=h.arms[1].hand,g=new V3();let mesh=null;
+  h.root.traverse(o=>{if(o.isSkinnedMesh&&!mesh&&o.skeleton.bones.includes(hand))mesh=o;});
+  if(mesh){const bi=mesh.skeleton.bones.indexOf(hand),inv=mesh.skeleton.boneInverses[bi],geo=mesh.geometry,P_=geo.attributes.position,SI=geo.attributes.skinIndex,SW=geo.attributes.skinWeight,t=new V3();let n=0;
+    for(let i=0;i<P_.count;i++){let w=0;for(let j=0;j<4;j++)if(SI.getComponent(i,j)===bi)w+=SW.getComponent(i,j);
+      if(w>.5){t.fromBufferAttribute(P_,i).applyMatrix4(mesh.bindMatrix).applyMatrix4(inv);g.add(t);n++;}}
+    if(n>8){g.divideScalar(n);if(g.length()>.35)g.setLength(.35);}else g.set(0,0,0);}
+  return h._grip=g;}
 function mountWeapons(h){
   h.root.traverse(o=>{if(o.name==='oldHandle')o.visible=false;});
   const hr=h.arms[1].hand,hl=h.arms[0].hand;
   for(const w of new Set([katana,rifle,pistolR,flailHandle,...Object.values(MELEE_MESH)]))hr.add(w);hl.add(pistolL);
+  {const g=heroGrip(h);for(const w of new Set([katana,...Object.values(MELEE_MESH)]))w.position.copy(g);}
   h.tip=flailHandle.userData.tip;applyWeaponVis();
 }
 function applyWeaponVis(){const id=W().id;for(const k in MELEE_MESH)MELEE_MESH[k].visible=id===k;rifle.visible=id==='rifle';pistolR.visible=pistolL.visible=id==='pistols';flailHandle.visible=id==='flail';
@@ -1830,8 +1840,8 @@ function animHero(dt){
   if(s==='airstrike'){aL.sh.rotation.set(-2.9,0,-.1);aL.el.rotation.x=-.1;}
   if(s==='cast'){if(P.castKind==='swords'){aR.sh.rotation.set(-2.95,0,.1);aR.el.rotation.x=-.05;aL.sh.rotation.set(-2.6,0,-.3);}else{const k=clamp(P.t/.3,0,1);aR.sh.rotation.set(lerp(-2.8,-.7,k),0,.2);aL.sh.rotation.set(lerp(-2.8,-.7,k),0,-.2);h.body.rotation.x=lerp(-.2,.45,k);L.knee.rotation.x=Rl.knee.rotation.x=.6*k;h.body.position.y=-.25*k;}}
   const guard=s==='move'&&!isGun()&&W().id!=='flail';
-  if(guard){aR.sh.rotation.set(-.38+sw*.15,0,.16);aR.el.rotation.x=-1.2;}
-  {const ki=curBlade().children[0];ki.rotation.x=lerp(ki.rotation.x,(s==='sw'||s==='shadow')?.12:guard?(W().id==='scythe'?-.15:-.55):(W().id==='scythe'?.4:1.1),Math.min(1,dt*16));}
+  if(guard){aR.sh.rotation.set(-.32+sw*.15,0,.14);aR.el.rotation.x=-1.0;}
+  {const ki=curBlade().children[0];ki.rotation.x=lerp(ki.rotation.x,(s==='sw'||s==='shadow')?.12:guard?(W().id==='scythe'?-.05:-.75):(W().id==='scythe'?.4:1.1),Math.min(1,dt*16));}
   if(isGun()&&(s==='move')){const rk=(P.recoil||0)*.12;
     if(P.aiming){aR.sh.rotation.set(-1.52+rk,0,-.22);aR.el.rotation.x=-.04;
       if(W().id==='rifle'){aL.sh.rotation.set(-1.25,0,.5);aL.el.rotation.x=-.55;}else{aL.sh.rotation.set(-1.52+rk*.5,0,.22);aL.el.rotation.x=-.04;}}
