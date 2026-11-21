@@ -1262,6 +1262,7 @@ function heroGrip(h){
       if(w>.5){t.fromBufferAttribute(P_,i).applyMatrix4(mesh.bindMatrix).applyMatrix4(inv);g.add(t);n++;}}
     if(n>8){g.divideScalar(n);if(g.length()>.35)g.setLength(.35);}else g.set(0,0,0);}
   return h._grip=g;}
+window.__zb={get hero(){return hero},katana,MELEE_MESH,heroGrip,V3};
 function mountWeapons(h){
   h.root.traverse(o=>{if(o.name==='oldHandle')o.visible=false;});
   const hr=h.arms[1].hand,hl=h.arms[0].hand;
