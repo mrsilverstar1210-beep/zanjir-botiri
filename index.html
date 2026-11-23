@@ -207,7 +207,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <p>Qahramoningni tanla: ninja, Valkiriya, Sarkarda, Nova, Malika, askar yoki viking. Jinlar qo'shini bosib kelmoqda. Zanjirli gurzingni aylantir, ularni to'lqinma-to'lqin yanchib tashla. Lava tomirlaridan ehtiyot bo'l.</p>
     <button class="go" id="goBtn" disabled>YUKLANMOQDA…</button>
     <button id="fsBtn" style="display:none;margin:8px auto 0;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,200,120,.5);background:rgba(0,0,0,.4);color:#ffd27a;font:700 13px Inter,sans-serif">⛶ To'liq ekran</button>
-    <div id="verTag">v3.5 · 23.11</div>
+    <div id="verTag">v3.6 · devor+zina · 23.11</div>
     <div class="tabs" id="ltabs">
       <button data-t="hero" class="on">Qahramon</button><button data-t="wpn">Qurollar</button><button data-t="keys">Boshqaruv</button><button data-t="set" id="setBtn">Sozlamalar</button>
     </div>
@@ -759,23 +759,74 @@ if(!FOR){for(const [ci,t] of [[0,.42],[0,.7],[1,.3],[1,.62],[2,.5]]){const c=riv
   BRIDGES.push({x:p.x,z:p.z,ry,c:Math.cos(ry),s:Math.sin(ry)});LMK.push({f:'m_bridge.js',v:'MBRIDGE_B64',x:p.x,z:p.z,ry,s:10,y:-.75,bridge:true});}}
 function onBridge(x,z){for(const b of BRIDGES){const dx=x-b.x,dz=z-b.z;const along=dx*b.s+dz*b.c,across=dx*b.c-dz*b.s;if(Math.abs(across)<5.1&&Math.abs(along)<1.4)return true;}return false;}
 
+// ================= MLBB USLUBIDAGI DEVORLAR VA ZINALI SUPALAR =================
+const PLATS=[],WALLS=[];
+function groundH(x,z){let h=0;for(const p of PLATS){const dx=x-p.x,dz=z-p.z;if(dx*dx+dz*dz>p.R2)continue;const lx=dx*p.c-dz*p.s,lz=dx*p.s+dz*p.c;
+  if(Math.abs(lx)<=p.hx&&Math.abs(lz)<=p.hz){if(p.h>h)h=p.h;continue;}
+  for(const r of p.ramps){const t=(r.ax==='x'?lx*r.sg:lz*r.sg)-r.e0,sd=r.ax==='x'?lz:lx;if(t>=-.05&&t<=r.L&&Math.abs(sd)<=r.w){const v=p.h*(1-Math.max(0,t)/r.L);if(v>h)h=v;}}}
+  return h;}
+if(FOR){
+ const TM={rock:M(0x6d675a,{roughness:.95}),rockD:M(0x4f4a40,{roughness:1}),rockL:M(0x8a8373,{roughness:.9}),top:M(0x4e7a32,{roughness:1}),topD:M(0x3d6428,{roughness:1}),
+   step:M(0x7a7262,{roughness:.9}),moss:M(0x56803a,{roughness:1}),torch:glow(2.6,1.3,.4)};
+ for(const k of ['rock','rockD','rockL','top','topD','step','moss'])seeThrough(TM[k],.7);
+ const free=(x,z,r)=>{const d=Math.hypot(x,z);if(d<34+r||d>WR-12-r)return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+4))return false;
+   if(obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<o.r+r+1))return false;if(PLATS.some(p=>Math.hypot(p.x-x,p.z-z)<p.rr+r+8))return false;return true;};
+ // ---- baland supalar ----
+ let tries=0;while(PLATS.length<12&&tries<900){tries++;const a=rng()*TAU,d=R(45,WR-30),x=Math.sin(a)*d,z=Math.cos(a)*d;
+   const hx=R(6,9.5),hz=R(5.5,8.5),h=R(2.8,3.6),ry=R(0,TAU),L=h*2.7,rr=Math.hypot(hx,hz)+L;if(!free(x,z,rr))continue;
+   const c=Math.cos(ry),s=Math.sin(ry);const sides=[['z',1],['z',-1],['x',1],['x',-1]].sort(()=>rng()-.5).slice(0,rng()<.55?2:1);
+   const ramps=sides.map(([ax,sg])=>({ax,sg,e0:ax==='x'?hx:hz,L,w:2.1}));
+   const p={x,z,ry,c,s,hx,hz,h,ramps,rr,R2:(rr+2)**2};PLATS.push(p);
+   obstacles.push({x,z,r:Math.hypot(hx,hz),ry,plat:h,box:{hx,hz,c,s}});RES.push({x,z,r:rr});
+   const lw=(lx,lz)=>[x+lx*c+lz*s,z-lx*s+lz*c];
+   // tana: qoya qirralari
+   at(x,z,ry);S(G.box(hx*2-.4,h,hz*2-.4),TM.rockD,0,h/2,0);
+   S(G.box(hx*2+.2,.5,hz*2+.2),TM.top,0,h-.2,0);
+   for(const [ex,ez,lenA,ax] of [[0,hz,hx,'x'],[0,-hz,hx,'x'],[hx,0,hz,'z'],[-hx,0,hz,'z']]){const n=Math.ceil(lenA*2/2.2);
+     for(let i=0;i<n;i++){const t=-lenA+(i+.5)*(lenA*2/n);const bx=ax==='x'?t:ex,bz=ax==='x'?ez:t;const sc=R(1.5,2.1);
+       S(rng()<.5?G.rock:G.rock2,rng()<.3?TM.rockL:TM.rock,bx,h*R(.3,.55),bz,R(0,3),R(0,3),R(0,3),sc,h*R(.55,.7),sc);
+       if(rng()<.45)S(G.sph,TM.moss,bx,h-.05,bz,0,0,0,R(.6,1.1),.35,R(.6,1.1));}}
+   for(let i=0;i<6;i++)S(G.sph,TM.topD,R(-hx+1,hx-1),h+.05,R(-hz+1,hz-1),0,0,0,R(.8,1.8),.18,R(.8,1.8));
+   // zinalar
+   for(const r of ramps){const n=Math.ceil(r.L/.75);for(let i=0;i<n;i++){const t0=r.e0+i*(r.L/n),t1=t0+r.L/n,hy=h*(1-(i+.5)/n);
+       const tc=(t0+t1)/2*r.sg,lx=r.ax==='x'?tc:0,lz=r.ax==='x'?0:tc;const dx=r.ax==='x'?r.L/n+.05:r.w*2,dz=r.ax==='x'?r.w*2:r.L/n+.05;
+       S(G.box(dx,hy+.02,dz),i%2?TM.step:TM.rockL,lx,hy/2,lz);}
+     for(const sd of [-1,1]){const tc=(r.e0+r.L/2)*r.sg;const lx=r.ax==='x'?tc:sd*(r.w+.35),lz=r.ax==='x'?sd*(r.w+.35):tc;
+       const len=Math.hypot(r.L,h),ang=Math.atan2(h,r.L);S(G.box(r.ax==='x'?len:.5,.55,r.ax==='x'?.5:len),TM.rock,lx,h/2+.25,lz,r.ax==='x'?0:ang*r.sg,0,r.ax==='x'?ang*-r.sg:0);}
+     // zina boshida mash'ala
+     for(const sd of [-1,1]){const tt=(r.e0+r.L+.3)*r.sg;const lx=r.ax==='x'?tt:sd*(r.w+.6),lz=r.ax==='x'?sd*(r.w+.6):tt;
+       S(G.cyl8(.12,.16,1.6,6),TM.rockD,lx,.8,lz);S(G.sph,TM.torch,lx,1.75,lz,0,0,0,.22,.3,.22);}}
+   // tepada nur toshi (jon tiklaydi)
+   S(G.cyl8(.9,1.1,.5,8),TM.rockL,0,h+.25,0);S(G.rock2,TM.torch,0,h+1.1,0,.3,0,.2,.35,.6,.35);
+   RESTS.push({id:'plat'+PLATS.length,name:'TEPALIK',x,z,r:2.4,plat:true});
+ }
+ // ---- MLBB devorlari: halqalar bo'ylab, yo'laklar bilan ----
+ for(const [rad,segN] of [[72,14],[118,20],[150,24],[205,30]]){const off=rng()*TAU;
+   for(let i=0;i<segN;i++){if(rng()<.38)continue;const a0=off+i/segN*TAU,a1=a0+TAU/segN*R(.45,.7);const am=(a0+a1)/2,len=(a1-a0)*rad;
+     const x=Math.sin(am)*rad,z=Math.cos(am)*rad,ry=am+PI/2,hx=len/2,hz=.8;if(!free(x,z,hx*.6))continue;
+     const c=Math.cos(ry),s=Math.sin(ry);obstacles.push({x,z,r:Math.hypot(hx,hz),ry,box:{hx,hz,c,s},wall:1});WALLS.push({x,z,hx});
+     at(x,z,ry);const n=Math.ceil(len/1.3);
+     for(let k=0;k<n;k++){const lx=-hx+(k+.5)*len/n;const hh=R(1.7,2.3);S(G.box(len/n+.15,hh,1.5),k%3?TM.rock:TM.rockD,lx,hh/2,0,0,R(-.06,.06),0);
+       S(rng()<.5?G.rock:G.rock2,TM.rockL,lx,hh+.05,R(-.2,.2),R(0,3),R(0,3),R(0,3),.75,.4,.75);if(rng()<.4)S(G.sph,TM.moss,lx,hh+.15,0,0,0,0,.7,.25,.8);}
+     for(const e of [-1,1]){S(G.cyl8(.85,1,2.9,8),TM.rockD,e*hx,1.45,0);S(G.sph,TM.moss,e*hx,2.95,0,0,0,0,.9,.35,.9);}}}
+}
 // ================= FOREST PLACEMENT =================
 const FOREST={pine:[],broad:[],big:[],bush:[],plant:[],rock:[],grass:[]};
 if(MAP==='orman'){
   const clearings=[];for(let i=0;i<24;i++)clearings.push({x:R(-WR*.85,WR*.85),z:R(-WR*.85,WR*.85),r:R(9,17)});
   const inClear=(x,z)=>clearings.some(c=>(c.x-x)**2+(c.z-z)**2<c.r*c.r);
-  const ok=(x,z,r)=>{const d2=x*x+z*z;if(d2<(30+r)**2||d2>(WR+6)**2)return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+6))return false;return true;};
+  const ok=(x,z,r)=>{const d2=x*x+z*z;if(d2<(30+r)**2||d2>(WR+6)**2)return false;if(PLATS.some(p=>Math.hypot(p.x-x,p.z-z)<p.rr+1))return false;if(obstacles.some(o=>o.wall&&Math.hypot(o.x-x,o.z-z)<o.r+1.5))return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+6))return false;return true;};
   const near=(x,z,d)=>obstacles.some(o=>{const dx=o.x-x,dz=o.z-z;return dx*dx+dz*dz<(o.r+d)**2;});
   const trees=(list,n,minD,trunk,s0,s1,clr)=>{let tries=0;while(list.length<n&&tries<n*10){tries++;const x=R(-WR-4,WR+4),z=R(-WR-4,WR+4);
     if(!ok(x,z,2)||(clr&&inClear(x,z))||near(x,z,minD))continue;const t={x,z,ry:R(0,TAU),s:R(s0,s1)};list.push(t);obstacles.push({x,z,r:trunk*t.s,tree:true});}};
   FOREST.pine.push(...ZTREE.pine);FOREST.broad.push(...ZTREE.broad);FOREST.plant.push(...ZTREE.plant);FOREST.rock.push(...ZTREE.rock);FOREST.snow=ZTREE.snow;
   trees(FOREST.big,12,10,2.2,.5,.62,true);
-  trees(FOREST.pine,380,2.6,.55,.8,1.3,true);
-  trees(FOREST.broad,265,3.2,.6,.8,1.25,true);
+  trees(FOREST.pine,190,3.2,.55,.8,1.25,true);
+  trees(FOREST.broad,130,3.6,.6,.8,1.2,true);
   const scat=(list,n,minD,types,s0,s1,obst)=>{for(let i=0;i<n;i++){const x=R(-WR,WR),z=R(-WR,WR);if(!ok(x,z,.5))continue;if(obst&&near(x,z,minD))continue;
     const t={x,z,ry:R(0,TAU),s:R(s0,s1),type:types[Math.floor(rng()*types.length)]};list.push(t);if(obst)obstacles.push({x,z,r:obst*t.s});}};
-  scat(FOREST.bush,1800,0,['bush1','bush2'],1.6,2.8,0);
-  scat(FOREST.plant,1500,0,['fern','taro','ginger','redplant'],1.4,2.6,0);
+  scat(FOREST.bush,800,0,['bush1','bush2'],1.1,1.9,0);
+  scat(FOREST.plant,900,0,['fern','taro','ginger','redplant'],1.1,2.0,0);
   scat(FOREST.rock,90,1,['rock1','rock4'],.7,1.3,1.6);
   scat(FOREST.rock,260,0,['rock2','rock3'],.8,2.2,0);
   const noGr=ZONES.filter(z=>/swamp|portal|ice/.test(z.id));
@@ -1270,10 +1321,10 @@ function grassGroundTexture(){return canvasTex(1024,1024,(g,w,h)=>{g.fillStyle='
   for(let i=0;i<500;i++){g.fillStyle=`rgba(80,60,35,${Math.random()*.4})`;g.beginPath();g.arc(Math.random()*w,Math.random()*h,1+Math.random()*3,0,TAU);g.fill();}},true,true);}
 // see-through hole between camera and player
 const seeU={uCam:{value:new V3()},uPl:{value:new V3()},uPS:{value:new V3(-9999,-9999,0)}};
-function seeThrough(mat){mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,seeU);
+function seeThrough(mat,minY=2.3){mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,seeU);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vSeeW;').replace('#include <project_vertex>','#include <project_vertex>\n#ifdef USE_INSTANCING\nvSeeW=(modelMatrix*instanceMatrix*vec4(transformed,1.)).xyz;\n#else\nvSeeW=(modelMatrix*vec4(transformed,1.)).xyz;\n#endif');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vSeeW;uniform vec3 uCam;uniform vec3 uPl;uniform vec3 uPS;').replace('void main() {','void main() {\n{float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5);float sd=length(gl_FragCoord.xy-uPS.xy)/uPS.z;if(vSeeW.y>2.3&&sd<1.&&sd<.78+.22*n&&distance(vSeeW,uCam)<distance(uPl,uCam)+6.)discard;vec3 cp=uPl-uCam;float L=length(cp);vec3 dr=cp/L;vec3 w=vSeeW-uCam;float t=dot(w,dr);if(t>0.&&t<L-.6){float d=length(w-dr*t);float rad=.8+3.2*smoothstep(0.,L,t);if(d<rad-n*.9)discard;}}');};
-  mat.customProgramCacheKey=()=>'see';return mat;}
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vSeeW;uniform vec3 uCam;uniform vec3 uPl;uniform vec3 uPS;').replace('void main() {','void main() {\n{float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5);float sd=length(gl_FragCoord.xy-uPS.xy)/uPS.z;if(vSeeW.y>max('+minY.toFixed(2)+',uPl.y-.5)&&sd<1.&&sd<.78+.22*n&&distance(vSeeW,uCam)<distance(uPl,uCam)+6.)discard;vec3 cp=uPl-uCam;float L=length(cp);vec3 dr=cp/L;vec3 w=vSeeW-uCam;float t=dot(w,dr);if(t>0.&&t<L-.6){float d=length(w-dr*t);float rad=.8+3.2*smoothstep(0.,L,t);if(d<rad-n*.9)discard;}}');};
+  mat.customProgramCacheKey=()=>'see'+minY;return mat;}
 const FMAT={};
 function forestMat(name,isPine){
   const n=name.toLowerCase();let k;
@@ -1887,8 +1938,8 @@ function getInput(){
   const m=Math.hypot(x,z);if(m>1){x/=m;z/=m;}
   return {x,z,m:Math.min(1,m)};
 }
-function resolveCollisions(pos,r){
-  for(const o of obstacles){if(o.box){const b=o.box;const dx=pos.x-o.x,dz=pos.z-o.z;let lx=dx*b.c-dz*b.s,lz=dx*b.s+dz*b.c;const ex=b.hx+r,ez=b.hz+r;
+function resolveCollisions(pos,r,curH=0){
+  for(const o of obstacles){if(o.plat!==undefined&&curH>=o.plat-.65)continue;if(o.box){const b=o.box;const dx=pos.x-o.x,dz=pos.z-o.z;let lx=dx*b.c-dz*b.s,lz=dx*b.s+dz*b.c;const ex=b.hx+r,ez=b.hz+r;
       if(Math.abs(lx)<ex&&Math.abs(lz)<ez){const px=ex-Math.abs(lx),pz=ez-Math.abs(lz);if(px<pz)lx=Math.sign(lx||1)*ex;else lz=Math.sign(lz||1)*ez;pos.x=o.x+lx*b.c+lz*b.s;pos.z=o.z-lx*b.s+lz*b.c;}continue;}
     const dx=pos.x-o.x,dz=pos.z-o.z;const rr=o.r+r;const d2=dx*dx+dz*dz;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2);const k=(rr-d)/d;pos.x+=dx*k;pos.z+=dz*k;}}
   const d=Math.hypot(pos.x,pos.z);if(d>WR){pos.x*=WR/d;pos.z*=WR/d;}
@@ -1936,7 +1987,7 @@ function updPlayer(dt){
   else if(s==='slam'||s==='shadow'||s==='plasma'){P.vel.set(0,0,0);}
   else{const a=1-Math.exp(-dt*22);P.vel.x+=(tvx-P.vel.x)*a;P.vel.z+=(tvz-P.vel.z)*a;}
   P.pos.x+=P.vel.x*dt;P.pos.z+=P.vel.z*dt;
-  resolveCollisions(P.pos,.55);
+  resolveCollisions(P.pos,.55,P.ghRaw||0);{const g=groundH(P.pos.x,P.pos.z);P.ghRaw=g;const cur=P.gh||0;P.gh=g>cur?Math.min(g,cur+dt*9+(g-cur)*.35):Math.max(g,cur-dt*(g<cur-1?14:9));}
   P.speed=Math.hypot(P.vel.x,P.vel.z);
   if(s==='move'&&inp.m>.1&&!P.aiming){const ta=Math.atan2(inp.x,inp.z);P.face+=wrapA(ta-P.face)*Math.min(1,dt*24);}
   // slam height
@@ -2121,7 +2172,7 @@ function mocapApply(h,s,dt){
 }
 function animHero(dt){
   const h=hero,s=P.state;
-  h.root.position.set(P.pos.x,P.y,P.pos.z);
+  h.root.position.set(P.pos.x,P.y+(P.gh||0),P.pos.z);
   let yaw=P.face;
   if(s==='spin'){const a=Math.atan2(_bt.x-P.pos.x,_bt.z-P.pos.z);yaw=a;}
   if(s==='sw'&&P.mv.kind==='spin')yaw=P.face+P.swAng;
@@ -2247,7 +2298,7 @@ function updEnemies(dt){
     g.rotation.y=e.face;
     // lava burns enemies
     if(!e.dragon&&lavaAt(pos.x,pos.z)&&!onBridge(pos.x,pos.z)){e.hp-=18*dt;e.flash=Math.max(e.flash,.3);if(Math.random()<.3)emit(pos.x,.3,pos.z,0,rnd(2,4),0,.4,.12,3,1,.15,0,1);if(e.hp<=0)killEnemy(e,0,0);}
-    resolveCollisions(pos,e.r);
+    resolveCollisions(pos,e.r,e.ghRaw||0);
     // hp bar
     if(e.hp<e.maxHp&&!e.dead){e.bar.visible=true;e.bar.position.set(pos.x,pos.y+2.15*e.sc,pos.z);e.bar.quaternion.copy(camera.quaternion);e.fg.scale.x=Math.max(.001,e.hp/e.maxHp);}
   }
@@ -2304,9 +2355,9 @@ function updZones(dt){
     else if(k==='petal')emit(x,rnd(3,6),z,rnd(-.6,.6),-rnd(.3,.7),rnd(-.6,.6),4,.07,2.4,.9,1.6,0,1);
     else emit(x,rnd(.5,3),z,rnd(-.3,.3),rnd(-.1,.3),rnd(-.3,.3),2.5,.05,inZ.id==='night'?.4:2.2,inZ.id==='night'?2.2:2.0,inZ.id==='night'?2.4:.6,0,1);}
   // dam olish joylari
-  restT-=dt;for(const r of RESTS){const d=Math.hypot(P.pos.x-r.x,P.pos.z-r.z);if(d<r.r&&P.state!=='dead'){
+  restT-=dt;for(const r of RESTS){const d=Math.hypot(P.pos.x-r.x,P.pos.z-r.z);if(d<r.r&&P.state!=='dead'&&(!r.plat||(P.gh||0)>1)){
     if(P.hp<P.maxHp){P.hp=Math.min(P.maxHp,P.hp+P.maxHp*.12*dt);if(restT<=0){restT=1.2;dmgText(P.pos.x,2.8,P.pos.z,'+ DAM OLISH','heal');emit(P.pos.x,.3,P.pos.z,0,2,0,1,.1,.6,2.4,.8,0,1);}}
-    if(zoneMsgT<=0){zoneMsgT=8;showBanner(r.name,"Dam olish joyi · jon tiklanadi");}}}
+    if(zoneMsgT<=0&&!r.plat){zoneMsgT=8;showBanner(r.name,"Dam olish joyi · jon tiklanadi");}}}
   zoneMsgT-=dt;
   // eng yaqin zonaga strelka
   {const za=$('zArrow');let nz=null,nd=1e9;for(const zn of ZONES){if(zn.cleared)continue;const d=Math.hypot(P.pos.x-zn.x,P.pos.z-zn.z);if(d<nd){nd=d;nz=zn;}}
@@ -2386,9 +2437,9 @@ function updCam(dt,title){
     camTarget.set(Math.sin(.12)*R_,hh*.62+bob,Math.cos(.12)*R_);camera.position.lerp(camTarget,1-Math.exp(-dt*3));
     camLook.lerp(_p.set(0,hh*.5,0),1-Math.exp(-dt*4));camera.lookAt(camLook);return;}
   const k=portrait?1.5:1;
-  camTarget.set(P.pos.x,P.pos.y*.3+9.6*k,P.pos.z+8.2*k);
+  camTarget.set(P.pos.x,(P.gh||0)+P.pos.y*.3+9.6*k,P.pos.z+8.2*k);
   camera.position.lerp(camTarget,1-Math.exp(-dt*6));
-  camLook.lerp(_p.set(P.pos.x,1.2+P.y*.3,P.pos.z),1-Math.exp(-dt*10));
+  camLook.lerp(_p.set(P.pos.x,(P.gh||0)+1.2+P.y*.3,P.pos.z),1-Math.exp(-dt*10));
   camera.lookAt(camLook);
   // ekran silkinishi: silliq shovqin + qiyshayish, yo'nalishli turtki, zoom
   shakeT+=dt;
@@ -2601,7 +2652,7 @@ function frame(now){
     hero.root.updateMatrixWorld(true);hero.tip.getWorldPosition(handW);
     if(rope.pinned){rope.len=Math.max(1.4,handW.distanceTo(rope.target)*1.04);}else rope.len=lerp(rope.len,1.45,Math.min(1,dt*6));
     updRope(dt);
-    updEnemies(dt);updWaves(dt);updZones(dt);updOrbs(dt);updBullets(dt);updStrikes(dt);
+    for(const e of enemies){e.g.position.y-=e.ghA||0;e.ghA=0;}updEnemies(dt);for(const e of enemies){const g=groundH(e.g.position.x,e.g.position.z);e.ghRaw=g;const cur=e.gh||0;e.gh=g>cur?Math.min(g,cur+dt*9+(g-cur)*.35):Math.max(g,cur-dt*12);e.ghA=e.gh;e.g.position.y+=e.gh;}updWaves(dt);updZones(dt);updOrbs(dt);updBullets(dt);updStrikes(dt);
     drumT-=dt;if(drumT<=0&&enemies.some(e=>!e.dead)){drumT=.9;sfx.drum(.6);}
     if(P.hp>0&&P.hp<P.maxHp*.3){hbT-=dt;if(hbT<=0){hbT=.9;sfx.heart();}}
     if(P.state==='dead'&&P.deadT>1.6&&$('over').classList.contains('hide')){$('overStats').textContent=`${wave}-to'lqin  ·  ${kills} ta jin  ·  ${score} ochko`;$('over').classList.remove('hide');}
@@ -2610,7 +2661,7 @@ function frame(now){
     lobbyTick(rdt);P.prevT=P.t;P.t+=rdt;animHero(rdt);hero.root.updateMatrixWorld(true);hero.tip.getWorldPosition(handW);rope.len=1.45;updRope(rdt);
     updCam(rdt,true);
   }
-  sky.position.copy(camera.position);seeU.uCam.value.copy(camera.position);seeU.uPl.value.set(P.pos.x,1.3+P.y,P.pos.z);{_p.set(P.pos.x,1.2+P.y,P.pos.z).project(camera);const bw=innerWidth*PR,bh=innerHeight*PR;seeU.uPS.value.set((_p.x*.5+.5)*bw,(_p.y*.5+.5)*bh,(running?.36:.0)*Math.min(bw,bh)+1);}updChunks(rdt);rim.target.position.set(P.pos.x,0,P.pos.z);rim.position.set(P.pos.x-20,14,P.pos.z-24);
+  sky.position.copy(camera.position);seeU.uCam.value.copy(camera.position);seeU.uPl.value.set(P.pos.x,1.3+P.y+(P.gh||0),P.pos.z);{_p.set(P.pos.x,1.2+P.y+(P.gh||0),P.pos.z).project(camera);const bw=innerWidth*PR,bh=innerHeight*PR;seeU.uPS.value.set((_p.x*.5+.5)*bw,(_p.y*.5+.5)*bh,(running?.36:.0)*Math.min(bw,bh)+1);}updChunks(rdt);rim.target.position.set(P.pos.x,0,P.pos.z);rim.position.set(P.pos.x-20,14,P.pos.z-24);
   if(!paused){updParts(dt);updRings(dt);updWorld(running?dt:rdt,timeNow);updDmg(rdt);}
   if(useBloom&&composer){grade.uniforms.uTime.value=timeNow;composer.render(rdt);}else renderer.render(scene,camera);
 }
@@ -2681,7 +2732,7 @@ requestAnimationFrame(frame);
 $('goBtn').disabled=false;$('goBtn').textContent='JANGNI BOSHLASH';
 if(FOR){const pp=document.querySelector('#start .panel p');if(pp)pp.textContent="Qahramoningni tanla va qadimiy o'rmonga kir. Daraxtlar orasidan goblinlar, qo'chqorlar va olovli ajdar yopirilib kelmoqda. Zanjirli gurzingni aylantir va ularni to'lqinma-to'lqin yanchib tashla.";}
 document.getElementById('mapSub').textContent=FOR?'QADIMIY O\'RMON':'LAVA XAROBALARI';
-window.__game={get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
+window.__game={get joy(){return joy},PLATS,WALLS,groundH,get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
 </script>
 </body>
 </html>
