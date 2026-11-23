@@ -207,7 +207,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <p>Qahramoningni tanla: ninja, Valkiriya, Sarkarda, Nova, Malika, askar yoki viking. Jinlar qo'shini bosib kelmoqda. Zanjirli gurzingni aylantir, ularni to'lqinma-to'lqin yanchib tashla. Lava tomirlaridan ehtiyot bo'l.</p>
     <button class="go" id="goBtn" disabled>YUKLANMOQDA…</button>
     <button id="fsBtn" style="display:none;margin:8px auto 0;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,200,120,.5);background:rgba(0,0,0,.4);color:#ffd27a;font:700 13px Inter,sans-serif">⛶ To'liq ekran</button>
-    <div id="verTag">v3.8 · 5 yangi qahramon · 23.11</div>
+    <div id="verTag">v3.9 · 23.11</div>
     <div class="tabs" id="ltabs">
       <button data-t="hero" class="on">Qahramon</button><button data-t="wpn">Qurollar</button><button data-t="keys">Boshqaruv</button><button data-t="set" id="setBtn">Sozlamalar</button>
     </div>
@@ -220,11 +220,11 @@ body.lobby #hud,body.lobby #hud2{display:none}
       <div class="hcard" data-h="bride"><b>M</b><span>MALIKA</span><i>Oq libosdagi qiz</i></div>
       <div class="hcard" data-h="soldier"><b>A</b><span>ARVOH</span><i>Ghillie askar</i></div>
       <div class="hcard" data-h="viking"><b>B</b><span>BJORN</span><i>Viking</i></div>
-      <div class="hcard" data-h="monk"><b>B</b><span>BAHODIR</span><i>Mushtlashuvchi rohib</i></div>
-      <div class="hcard" data-h="hammer"><b>T</b><span>TOSHBOLTA</span><i>Bolg'achi pakana</i></div>
-      <div class="hcard" data-h="archer"><b>O</b><span>OYDIN</span><i>Kamonchi qiz</i></div>
-      <div class="hcard" data-h="sorc"><b>Q</b><span>QORBEKA</span><i>Muz sehrgari</i></div>
-      <div class="hcard" data-h="witch"><b>Z</b><span>ZULFIYA</span><i>Qora jodugar</i></div>
+      <div class="hcard" data-h="monk"><b>R</b><span>RAIKEN</span><i>Mushtlashuvchi rohib</i></div>
+      <div class="hcard" data-h="hammer"><b>B</b><span>BROMDUR</span><i>Bolg'achi pakana</i></div>
+      <div class="hcard" data-h="archer"><b>S</b><span>SYLRA</span><i>Kamonchi qiz</i></div>
+      <div class="hcard" data-h="sorc"><b>N</b><span>NIVARA</span><i>Muz sehrgari</i></div>
+      <div class="hcard" data-h="witch"><b>M</b><span>MORVENA</span><i>Qora jodugar</i></div>
       </div>
     </div>
     <div class="tab" id="tab-wpn"><div id="wpnList"></div></div>
@@ -1324,13 +1324,13 @@ HERO_CFG.warlord={file:'m_demo.js',v:'MDEMO_B64',kind:'A',title:'SARKARDA',H:2.4
   arm:[[[-.36,1.84],[-.47,1.45],[-.52,1.15],[-.53,1.0]],[[.36,1.84],[.47,1.45],[.52,1.15],[.53,1.0]]]};
 function makeTexHero(gs,c){const src=firstMesh(gs);normGeo(src.geometry,c.H);src.material.envMapIntensity=.7;c.mat=src.material;return makeBiped(gs,c);}
 // ---- 5 ta yangi qahramon (Tripo galereyasidan) ----
-HERO_CFG.monk={file:'nh_monk.js',v:'NH_MONK_B64',kind:'A',title:'BAHODIR',H:2.4,hipX:.2,hipY:1.0,kneeY:.55,headY:2.02,shY:1.72,torsoR:.32,armX:.5,armYmin:.6,legAmp:.45,
+HERO_CFG.monk={file:'nh_monk.js',v:'NH_MONK_B64',kind:'A',title:'RAIKEN',H:2.4,hipX:.2,hipY:1.0,kneeY:.55,headY:2.02,shY:1.72,torsoR:.32,armX:.5,armYmin:.6,legAmp:.45,
   arm:[[[-.45,1.72],[-.62,1.35],[-.68,1.0],[-.69,.72]],[[.45,1.72],[.62,1.35],[.66,1.0],[.67,.72]]]};
-HERO_CFG.hammer={file:'nh_viking.js',v:'NH_VIKING_B64',kind:'T',title:'TOSHBOLTA',H:2.4,hipX:.27,hipY:.62,kneeY:.32,headY:1.9,shY:1.56,shX:.5,elX:.82,handX:1.08,torsoR:.45,armR:.16,legY:.62,armX:.55,armYmin:1.36,down:1.3,legAmp:.7};
-HERO_CFG.archer={file:'nh_archer.js',v:'NH_ARCHER_B64',kind:'T',title:'OYDIN',H:2.4,hipX:.19,hipY:.95,kneeY:.5,headY:2.05,shY:1.86,shX:.2,elX:.55,handX:.95,torsoR:.17,armR:.065,legY:.95,armX:.22,armYmin:1.74,down:1.38};
-HERO_CFG.sorc={file:'nh_sorc.js',v:'NH_SORC_B64',kind:'T',title:'QORBEKA',H:2.4,hipX:.14,hipY:.95,kneeY:.5,headY:2.05,shY:1.82,shX:.28,elX:.6,handX:.95,torsoR:.3,armR:.08,legY:.9,armX:.3,armYmin:1.68,down:1.3,legAmp:.35,
+HERO_CFG.hammer={file:'nh_viking.js',v:'NH_VIKING_B64',kind:'T',title:'BROMDUR',H:2.4,hipX:.27,hipY:.62,kneeY:.32,headY:1.9,shY:1.56,shX:.5,elX:.82,handX:1.08,torsoR:.45,armR:.16,legY:.62,armX:.55,armYmin:1.36,down:1.3,legAmp:.7};
+HERO_CFG.archer={file:'nh_archer.js',v:'NH_ARCHER_B64',kind:'T',title:'SYLRA',H:2.4,hipX:.19,hipY:.95,kneeY:.5,headY:2.05,shY:1.86,shX:.2,elX:.55,handX:.95,torsoR:.17,armR:.065,legY:.95,armX:.22,armYmin:1.74,down:1.38};
+HERO_CFG.sorc={file:'nh_sorc.js',v:'NH_SORC_B64',kind:'T',title:'NIVARA',H:2.4,hipX:.14,hipY:.95,kneeY:.5,headY:2.05,shY:1.82,shX:.28,elX:.6,handX:.95,torsoR:.3,armR:.08,legY:.9,armX:.3,armYmin:1.68,down:1.3,legAmp:.35,
   prop:{side:1,grip:.42,test:(x,y)=>(x>.8&&y<1.95)||(x>.55&&y>=1.93)}};
-HERO_CFG.witch={file:'nh_witch.js',v:'NH_WITCH_B64',kind:'T',title:'ZULFIYA',H:2.4,hipX:.1,hipY:.85,kneeY:.45,headY:1.9,shY:1.65,shX:.25,elX:.45,handX:.72,torsoR:.3,armR:.09,legY:.85,armX:.3,armYmin:1.5,down:1.3,legAmp:.5,
+HERO_CFG.witch={file:'nh_witch.js',v:'NH_WITCH_B64',kind:'T',title:'MORVENA',H:2.4,hipX:.1,hipY:.85,kneeY:.45,headY:1.9,shY:1.65,shX:.25,elX:.45,handX:.72,torsoR:.3,armR:.09,legY:.85,armX:.3,armYmin:1.5,down:1.3,legAmp:.5,
   prop:{side:-1,grip:.42,test:(x,y)=>x<-.6&&!(y>1.55&&y<1.75&&x>-.74)}};
 function splitGeo(geo,test){const g=geo.index?geo.toNonIndexed():geo;const P_=g.attributes.position,n=P_.count/3;const keepA=[],propA=[];
   for(let t=0;t<n;t++){let all=true;for(let k=0;k<3;k++){const i=t*3+k;if(!test(P_.getX(i),P_.getY(i),P_.getZ(i))){all=false;break;}}(all?propA:keepA).push(t);}
