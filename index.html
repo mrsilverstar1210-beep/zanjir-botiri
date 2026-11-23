@@ -207,7 +207,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <p>Qahramoningni tanla: ninja, Valkiriya, Sarkarda, Nova, Malika, askar yoki viking. Jinlar qo'shini bosib kelmoqda. Zanjirli gurzingni aylantir, ularni to'lqinma-to'lqin yanchib tashla. Lava tomirlaridan ehtiyot bo'l.</p>
     <button class="go" id="goBtn" disabled>YUKLANMOQDA…</button>
     <button id="fsBtn" style="display:none;margin:8px auto 0;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,200,120,.5);background:rgba(0,0,0,.4);color:#ffd27a;font:700 13px Inter,sans-serif">⛶ To'liq ekran</button>
-    <div id="verTag">v3.6 · devor+zina · 23.11</div>
+    <div id="verTag">v3.7 · Uch yo'l arena · 23.11</div>
     <div class="tabs" id="ltabs">
       <button data-t="hero" class="on">Qahramon</button><button data-t="wpn">Qurollar</button><button data-t="keys">Boshqaruv</button><button data-t="set" id="setBtn">Sozlamalar</button>
     </div>
@@ -226,7 +226,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <div class="tab" id="tab-keys"><div class="keys" id="keys"></div></div>
     <div class="tab" id="tab-set">
     <div id="settings">
-      <div class="srow"><span>Xarita</span><div class="seg" data-k="map"><button data-v="orman">O'rmon</button><button data-v="lava">Lava</button></div></div>
+      <div class="srow"><span>Xarita</span><div class="seg" data-k="map"><button data-v="orman">O'rmon</button><button data-v="lava">Lava</button><button data-v="arena">Uch yo'l</button></div></div>
       <div class="srow"><span>Qahramon</span><div class="seg" data-k="hero"><button data-v="ninja">Ninja</button><button data-v="valkyrie">Valk.</button><button data-v="warlord">Sark.</button><button data-v="nova">Nova</button><button data-v="bride">Malika</button><button data-v="soldier">Askar</button><button data-v="viking">Viking</button></div></div>
       <div class="srow"><span>Grafika</span><div class="seg" data-k="q"><button data-v="auto">Avto</button><button data-v="low">Past</button><button data-v="mid">O'rta</button><button data-v="high">Yuqori</button></div></div>
       <div class="srow"><span>FPS chegarasi</span><div class="seg" data-k="fps"><button data-v="30">30</button><button data-v="60">60</button><button data-v="120">120</button><button data-v="144">144</button><button data-v="0">MAX</button></div></div>
@@ -291,8 +291,8 @@ let seed=20261116;
 const rng=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 const R=(a,b)=>a+rng()*(b-a);
 const rnd=(a,b)=>a+Math.random()*(b-a);
-const MAP=(()=>{const h=location.hash.slice(1);if(h==='lava'||h==='orman')return h;try{return localStorage.getItem('zb_map')||'orman';}catch(e){return 'orman';}})();
-const FOR=MAP==='orman';
+const MAP=(()=>{const h=location.hash.slice(1);if(h==='lava'||h==='orman'||h==='arena')return h;try{return localStorage.getItem('zb_map')||'orman';}catch(e){return 'orman';}})();
+const ARENA=MAP==='arena';const FOR=MAP==='orman'||ARENA;
 const isTouch=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window);
 
 // ================= RENDERER =================
@@ -441,6 +441,14 @@ function blobTexture(inner,outer){
 
 // ================= WORLD =================
 const WR=FOR?240:118; // playable radius
+const AR={blue:{x:-150,z:150},red:{x:150,z:-150},
+  lanes:[[[-150,150],[-168,40],[-162,-162],[-40,-168],[150,-150]],[[-150,150],[0,0],[150,-150]],[[-150,150],[-40,168],[162,162],[168,-40],[150,-150]]],
+  river:[[-165,-165],[-95,-82],[-35,-40],[0,0],[40,35],[82,95],[165,165]]};
+function segD(x,z,ax,az,bx,bz){const vx=bx-ax,vz=bz-az,l2=vx*vx+vz*vz;let t=l2?((x-ax)*vx+(z-az)*vz)/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(x-ax-vx*t,z-az-vz*t);}
+function polyD(pts,x,z){let m=1e9;for(let i=0;i<pts.length-1;i++)m=Math.min(m,segD(x,z,pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1]));return m;}
+function arenaClear(x,z){if(!ARENA)return 1e9;let m=1e9;for(const L of AR.lanes)m=Math.min(m,polyD(L,x,z)-4.5);return Math.min(m,polyD(AR.river,x,z)-5,Math.hypot(x-AR.blue.x,z-AR.blue.z)-30,Math.hypot(x-AR.red.x,z-AR.red.z)-30);}
+function polyAt(pts,t){const L=[];let tot=0;for(let i=0;i<pts.length-1;i++){const d=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);L.push(d);tot+=d;}let r=Math.max(0,Math.min(1,t))*tot;
+  for(let i=0;i<L.length;i++){if(r<=L[i]||i===L.length-1){const k=Math.min(1,r/L[i]);return {x:pts[i][0]+(pts[i+1][0]-pts[i][0])*k,z:pts[i][1]+(pts[i+1][1]-pts[i][1])*k};}r-=L[i];}}
 const obstacles=[];
 const statics=new Map();
 const _m=new THREE.Matrix4(),_pm=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler(),_s=new V3(),_p=new V3();
@@ -581,14 +589,14 @@ function brazier(x,z){at(x,z,R(0,TAU));
 }
 
 // abandoned ZIS-42 trucks (reserve space before scatter)
-const TRUCKS=[{x:16,z:10,ry:-.65,tilt:0},{x:-36,z:26,ry:1.9,tilt:.1},{x:-60,z:-62,ry:.35,tilt:-.06},{x:60,z:-18,ry:2.6,tilt:0}].filter(t=>!lavaAt(t.x,t.z,5));
+const TRUCKS=[{x:16,z:10,ry:-.65,tilt:0},{x:-36,z:26,ry:1.9,tilt:.1},{x:-60,z:-62,ry:.35,tilt:-.06},{x:60,z:-18,ry:2.6,tilt:0}].filter(t=>!lavaAt(t.x,t.z,5)&&!ARENA);
 for(const t of TRUCKS){const s=Math.sin(t.ry),c=Math.cos(t.ry);for(let d=-3.4;d<=3.41;d+=1.7)obstacles.push({x:t.x+s*d,z:t.z+c*d,r:1.7});}
 // marble bride statue on pedestal
-const BRIDE=[[-19,6],[-18,-6],[6,-19],[19,4]].map(([x,z])=>({x,z})).find(d=>!lavaAt(d.x,d.z,4))||{x:-19,z:6};
+const BRIDE=(ARENA?[[-62,-18]]:[[-19,6],[-18,-6],[6,-19],[19,4]]).map(([x,z])=>({x,z})).find(d=>!lavaAt(d.x,d.z,4))||{x:-19,z:6};
 BRIDE.ry=Math.atan2(-BRIDE.x,-BRIDE.z);obstacles.push({x:BRIDE.x,z:BRIDE.z,r:1.9});
 at(BRIDE.x,BRIDE.z,BRIDE.ry);S(G.cyl8(1.75,1.9,.25,16),mats.stoneDark,0,.12,0);S(G.cyl8(1.45,1.6,.7,16),mats.stoneC,0,.6,0);S(G.cyl8(1.6,1.6,.1,16),mats.stoneB,0,.95,0);
 // ancient dragon statue (reserve space before scatter)
-const DRAGON=[[22,-32],[-24,-48],[30,30],[-34,6]].map(([x,z])=>({x,z})).find(d=>!lavaAt(d.x,d.z,7))||{x:30,z:30};
+const DRAGON=(ARENA?[[18,62]]:[[22,-32],[-24,-48],[30,30],[-34,6]]).map(([x,z])=>({x,z})).find(d=>!lavaAt(d.x,d.z,7))||{x:30,z:30};
 DRAGON.ry=Math.atan2(-DRAGON.x,-DRAGON.z);
 obstacles.push({x:DRAGON.x,z:DRAGON.z,r:5.2});
 {const fx=Math.sin(DRAGON.ry),fz=Math.cos(DRAGON.ry);for(const sd of [-1,1])brazier(DRAGON.x+fx*6.5+fz*sd*4.2,DRAGON.z+fz*6.5-fx*sd*4.2);}
@@ -596,7 +604,7 @@ obstacles.push({x:DRAGON.x,z:DRAGON.z,r:5.2});
 const RES=[...TRUCKS,DRAGON,BRIDE];
 // ================= SEHRLI O'RMON ZONALARI =================
 const ZONES=[],RESTS=[],ZTREE={pine:[],broad:[],snow:[],plant:[],rock:[]};
-if(FOR){
+if(FOR&&!ARENA){
 const ZM={moss:M(0x3f7a2c,{flatShading:false,roughness:.96}),mossD:M(0x2b5420,{roughness:1}),stone:M(0x77715f),stoneD:M(0x4b463b),bark:M(0x4e3826,{roughness:1}),barkD:M(0x30231a,{roughness:1}),
   wood:M(0x6e4c2e,{roughness:.9}),woodD:M(0x4a321e),leaf:M(0x2f6e27,{flatShading:false}),leafL:M(0x5c9a3a,{flatShading:false}),flower:M(0xe7a6cc,{flatShading:false}),flowerW:M(0xf4eedd,{flatShading:false}),marble:M(0xcfc6b2),
   snow:M(0xeaf3ff,{flatShading:false,roughness:.65}),iron:M(0x2b2b2e,{metalness:.7,roughness:.4}),dark:new THREE.MeshBasicMaterial({color:0x050806}),
@@ -725,14 +733,14 @@ for(const z of ZONES){ZC=z;
     for(const sd of [-1,1]){zat(0,4+sd*.7);S(G.box(30,.12,.12),ZM.iron,0,.08,0);}for(let k=-7;k<=7;k++){zat(k*2,4);S(G.box(.3,.08,2),ZM.wood,0,.04,0);}zLantern(-3.5,2.2,2.6);zLantern(3.5,2.2,2.6);}
  }}
 }
-function pickSpot(cands,rad){for(const [x,z] of cands){if(lavaAt(x,z,rad))continue;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<rad+14))continue;if(x*x+z*z<(rad+16)**2)continue;return {x,z};}return null;}
+function pickSpot(cands,rad){for(const [x,z] of cands){if(lavaAt(x,z,rad))continue;if(ARENA&&arenaClear(x,z)<rad+4)continue;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<rad+14))continue;if(x*x+z*z<(rad+16)**2)continue;return {x,z};}return null;}
 function addBox(x,z,ry,hx,hz){obstacles.push({x,z,r:Math.hypot(hx,hz),ry,box:{hx,hz,c:Math.cos(ry),s:Math.sin(ry)}});RES.push({x,z,r:Math.hypot(hx,hz)});}
-const TEMPLE=pickSpot([[-48,-80],[55,58],[-75,28],[72,-62],[5,75],[-80,-30]],16);
+const TEMPLE=pickSpot(ARENA?[[-95,-10],[10,95],[95,10],[-10,-95],[-110,60]]:[[-48,-80],[55,58],[-75,28],[72,-62],[5,75],[-80,-30]],16);
 if(TEMPLE){TEMPLE.ry=Math.atan2(-TEMPLE.x,-TEMPLE.z);addBox(TEMPLE.x,TEMPLE.z,TEMPLE.ry,11.1,10.3);
   const fx=Math.sin(TEMPLE.ry),fz=Math.cos(TEMPLE.ry);for(const sd of [-1,1])brazier(TEMPLE.x+fx*12.5+fz*sd*7,TEMPLE.z+fz*12.5-fx*sd*7);}
-const TERRACE=pickSpot([[40,62],[-62,58],[78,10],[-30,-95],[95,-20]],11);
+const TERRACE=pickSpot(ARENA?[[60,-60],[-60,60],[100,-100],[-100,100]]:[[40,62],[-62,58],[78,10],[-30,-95],[95,-20]],11);
 if(TERRACE){TERRACE.ry=Math.atan2(-TERRACE.x,-TERRACE.z);addBox(TERRACE.x,TERRACE.z,TERRACE.ry,10.1,4.3);}
-const GTREES=[];for(let i=0;i<60&&GTREES.length<9;i++){const x=R(-100,100),z=R(-100,100);if(x*x+z*z<22*22||lavaAt(x,z,4))continue;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<16))continue;if(obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<o.r+4))continue;
+const GTREES=[];for(let i=0;i<60&&GTREES.length<9;i++){const x=R(-100,100),z=R(-100,100);if(x*x+z*z<22*22||lavaAt(x,z,4))continue;if(ARENA&&arenaClear(x,z)<6)continue;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<16))continue;if(obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<o.r+4))continue;
   const t={x,z,ry:R(0,TAU),s:R(.85,1.25)};GTREES.push(t);RES.push(t);obstacles.push({x,z,r:1.1*t.s});}
 // center plaza
 at(0,0);
@@ -769,10 +777,10 @@ if(FOR){
  const TM={rock:M(0x6d675a,{roughness:.95}),rockD:M(0x4f4a40,{roughness:1}),rockL:M(0x8a8373,{roughness:.9}),top:M(0x4e7a32,{roughness:1}),topD:M(0x3d6428,{roughness:1}),
    step:M(0x7a7262,{roughness:.9}),moss:M(0x56803a,{roughness:1}),torch:glow(2.6,1.3,.4)};
  for(const k of ['rock','rockD','rockL','top','topD','step','moss'])seeThrough(TM[k],.7);
- const free=(x,z,r)=>{const d=Math.hypot(x,z);if(d<34+r||d>WR-12-r)return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+4))return false;
+ const free=(x,z,r)=>{const d=Math.hypot(x,z);if(d<34+r||d>WR-12-r)return false;if(ARENA&&arenaClear(x,z)<r+3)return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+4))return false;
    if(obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<o.r+r+1))return false;if(PLATS.some(p=>Math.hypot(p.x-x,p.z-z)<p.rr+r+8))return false;return true;};
  // ---- baland supalar ----
- let tries=0;while(PLATS.length<12&&tries<900){tries++;const a=rng()*TAU,d=R(45,WR-30),x=Math.sin(a)*d,z=Math.cos(a)*d;
+ let tries=0;while(PLATS.length<(ARENA?7:12)&&tries<900){tries++;const a=rng()*TAU,d=R(45,WR-30),x=Math.sin(a)*d,z=Math.cos(a)*d;
    const hx=R(6,9.5),hz=R(5.5,8.5),h=R(2.8,3.6),ry=R(0,TAU),L=h*2.7,rr=Math.hypot(hx,hz)+L;if(!free(x,z,rr))continue;
    const c=Math.cos(ry),s=Math.sin(ry);const sides=[['z',1],['z',-1],['x',1],['x',-1]].sort(()=>rng()-.5).slice(0,rng()<.55?2:1);
    const ramps=sides.map(([ax,sg])=>({ax,sg,e0:ax==='x'?hx:hz,L,w:2.1}));
@@ -801,21 +809,60 @@ if(FOR){
    RESTS.push({id:'plat'+PLATS.length,name:'TEPALIK',x,z,r:2.4,plat:true});
  }
  // ---- MLBB devorlari: halqalar bo'ylab, yo'laklar bilan ----
- for(const [rad,segN] of [[72,14],[118,20],[150,24],[205,30]]){const off=rng()*TAU;
-   for(let i=0;i<segN;i++){if(rng()<.38)continue;const a0=off+i/segN*TAU,a1=a0+TAU/segN*R(.45,.7);const am=(a0+a1)/2,len=(a1-a0)*rad;
-     const x=Math.sin(am)*rad,z=Math.cos(am)*rad,ry=am+PI/2,hx=len/2,hz=.8;if(!free(x,z,hx*.6))continue;
+ const WSPEC=[];
+ if(!ARENA){for(const [rad,segN] of [[72,14],[118,20],[150,24],[205,30]]){const off=rng()*TAU;
+   for(let i=0;i<segN;i++){if(rng()<.38)continue;const a0=off+i/segN*TAU,a1=a0+TAU/segN*R(.45,.7);const am=(a0+a1)/2,len=(a1-a0)*rad;WSPEC.push([Math.sin(am)*rad,Math.cos(am)*rad,am+PI/2,len/2]);}}}
+ else{let tr=0;while(WSPEC.length<36&&tr<2000){tr++;const x=R(-205,205),z=R(-205,205);if(Math.hypot(x,z)>WR-14)continue;const hx=R(4,8.5);if(arenaClear(x,z)<hx+2.5)continue;
+   if(WSPEC.some(w=>Math.hypot(w[0]-x,w[1]-z)<w[3]+hx+6))continue;WSPEC.push([x,z,R(0,PI),hx]);}}
+ {for(const [x,z,ry,hx] of WSPEC){const len=hx*2,hz=.8;if(!free(x,z,hx*.6))continue;
      const c=Math.cos(ry),s=Math.sin(ry);obstacles.push({x,z,r:Math.hypot(hx,hz),ry,box:{hx,hz,c,s},wall:1});WALLS.push({x,z,hx});
      at(x,z,ry);const n=Math.ceil(len/1.3);
      for(let k=0;k<n;k++){const lx=-hx+(k+.5)*len/n;const hh=R(1.7,2.3);S(G.box(len/n+.15,hh,1.5),k%3?TM.rock:TM.rockD,lx,hh/2,0,0,R(-.06,.06),0);
        S(rng()<.5?G.rock:G.rock2,TM.rockL,lx,hh+.05,R(-.2,.2),R(0,3),R(0,3),R(0,3),.75,.4,.75);if(rng()<.4)S(G.sph,TM.moss,lx,hh+.15,0,0,0,0,.7,.25,.8);}
      for(const e of [-1,1]){S(G.cyl8(.85,1,2.9,8),TM.rockD,e*hx,1.45,0);S(G.sph,TM.moss,e*hx,2.95,0,0,0,0,.9,.35,.9);}}}
 }
+// ================= ARENA "UCH YO'L": statik qismi =================
+const AR_TP=[];
+if(ARENA){
+ const AM={dirt:M(0x7d6446,{roughness:1}),dirtE:M(0x5a4a34,{roughness:1}),mud:M(0x4a4030,{roughness:1}),
+   water:new THREE.MeshStandardMaterial({color:0x1d5f78,roughness:.05,metalness:.85,transparent:true,opacity:.82}),
+   plaza:M(0x77736a,{roughness:.9}),plazaD:M(0x55524b),blueG:glow(.4,1.3,2.8),redG:glow(2.8,.7,.3),stone:M(0x6f6a60,{roughness:.9}),stoneD:M(0x4d4943)};
+ const crv=pts=>new THREE.CatmullRomCurve3(pts.map(([x,z])=>new V3(x,0,z)),false,'centripetal');
+ at(0,0);
+ for(const L of AR.lanes){const c=crv(L);S(ribbon(c,260,()=>5.4,.035),AM.dirtE,0,0,0);S(ribbon(c,260,()=>4.3,.05),AM.dirt,0,0,0);}
+ {const c=crv(AR.river);S(ribbon(c,300,()=>8.2,.045),AM.mud,0,0,0);S(ribbon(c,300,()=>6.4,.09),AM.water,0,0,0);}
+ // qal'alar
+ for(const [B,G_,blue] of [[AR.blue,AM.blueG,true],[AR.red,AM.redG,false]]){
+   at(B.x,B.z);S(G.cyl8(24,24.6,.14,48),AM.plazaD,0,.07,0);S(G.cyl8(21,21,.16,48),AM.plaza,0,.08,0);
+   {const rg=new THREE.RingGeometry(16.6,17.1,72);rg.rotateX(-PI/2);S(rg,G_,0,.18,0);const r2=new THREE.RingGeometry(9,9.3,56);r2.rotateX(-PI/2);S(r2,G_,0,.18,0);}
+   // devor halqasi, yo'lak chiqishlarida bo'shliq
+   const exits=AR.lanes.map(L=>{const p=polyAt(L,blue?.06:.94);return Math.atan2(p.x-B.x,p.z-B.z);});
+   const N=30;for(let i=0;i<N;i++){const a=i/N*TAU;if(exits.some(e=>Math.abs(Math.atan2(Math.sin(a-e),Math.cos(a-e)))<.42))continue;
+     const x=B.x+Math.sin(a)*27,z=B.z+Math.cos(a)*27;if(Math.hypot(x,z)>WR-3)continue;const ry=a+PI/2,hx=2.9;
+     obstacles.push({x,z,r:3.1,ry,box:{hx,hz:.9,c:Math.cos(ry),s:Math.sin(ry)}});
+     at(x,z,ry);S(G.box(hx*2+.1,2.6,1.6),i%2?AM.stone:AM.stoneD,0,1.3,0);S(G.box(hx*2+.3,.35,1.9),AM.plaza,0,2.75,0);
+     for(const k of [-1,1])S(G.box(.8,.6,.8),AM.stoneD,k*hx*.55,3.2,0);}
+   if(blue){// favvora
+     at(B.x,B.z);S(G.cyl8(4.2,4.6,1,24),AM.stone,0,.5,0);S(G.cyl8(3.6,3.6,.1,24),AM.water,0,.98,0);S(G.cyl8(.6,.8,3.2,10),AM.plaza,0,1.6,0);
+     S(G.sph,AM.blueG,0,3.6,0,0,0,0,.9,1.2,.9);obstacles.push({x:B.x,z:B.z,r:4.6});
+     RESTS.push({id:'fountain',name:'FAVVORA',x:B.x,z:B.z,r:11});
+     // ko'k taxt toshi (bezak)
+     const cx=B.x+9,cz=B.z-9;at(cx,cz,PI/4);S(G.cyl8(4,4.6,1.2,6),AM.stoneD,0,.6,0);S(G.cyl8(2.8,3.2,1,6),AM.stone,0,1.7,0);S(G.oct||G.sph,AM.blueG,0,5,0,0,0,0,1.6,2.6,1.6);obstacles.push({x:cx,z:cz,r:4.4});}
+ }
+ // minora joylari
+ const side=(L,t,off)=>{const p=polyAt(L,t),a=polyAt(L,t-.01),b=polyAt(L,t+.01);const tx=b.x-a.x,tz=b.z-a.z,l=Math.hypot(tx,tz)||1;return {x:p.x-tz/l*off,z:p.z+tx/l*off};};
+ AR.lanes.forEach((L,li)=>{for(const [t,team] of [[.17,'blue'],[.37,'blue'],[.63,'red'],[.83,'red']])AR_TP.push(Object.assign(side(L,t,li===1?(t<.5?6.5:-6.5):(li===0?6.5:-6.5)),{team,kind:'lane'}));});
+ for(const [B,team] of [[AR.blue,'blue'],[AR.red,'red']]){const a0=Math.atan2(-B.x,-B.z);for(const sd of [-1,1]){const a=a0+sd*.55;AR_TP.push({x:B.x+Math.sin(a)*14,z:B.z+Math.cos(a)*14,team,kind:'base'});}}
+ AR_TP.push({x:AR.red.x,z:AR.red.z,team:'red',kind:'core'});
+ for(const t of AR_TP){const core=t.kind==='core';at(t.x,t.z);S(G.cyl8(core?5:2.7,core?5.8:3.1,1,core?6:10),AM.stoneD,0,.5,0);S(G.cyl8(core?4:2.2,core?4.4:2.5,.25,core?6:10),AM.plaza,0,1.1,0);
+   obstacles.push({x:t.x,z:t.z,r:core?5.2:2.6,tower:1});}
+}
 // ================= FOREST PLACEMENT =================
 const FOREST={pine:[],broad:[],big:[],bush:[],plant:[],rock:[],grass:[]};
-if(MAP==='orman'){
+if(FOR){
   const clearings=[];for(let i=0;i<24;i++)clearings.push({x:R(-WR*.85,WR*.85),z:R(-WR*.85,WR*.85),r:R(9,17)});
   const inClear=(x,z)=>clearings.some(c=>(c.x-x)**2+(c.z-z)**2<c.r*c.r);
-  const ok=(x,z,r)=>{const d2=x*x+z*z;if(d2<(30+r)**2||d2>(WR+6)**2)return false;if(PLATS.some(p=>Math.hypot(p.x-x,p.z-z)<p.rr+1))return false;if(obstacles.some(o=>o.wall&&Math.hypot(o.x-x,o.z-z)<o.r+1.5))return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+6))return false;return true;};
+  const ok=(x,z,r)=>{const d2=x*x+z*z;if(d2<(30+r)**2||d2>(WR+6)**2)return false;if(ARENA&&arenaClear(x,z)<r+2)return false;if(PLATS.some(p=>Math.hypot(p.x-x,p.z-z)<p.rr+1))return false;if(obstacles.some(o=>o.wall&&Math.hypot(o.x-x,o.z-z)<o.r+1.5))return false;if(RES.some(o=>Math.hypot(o.x-x,o.z-z)<(o.r||5)+r+6))return false;return true;};
   const near=(x,z,d)=>obstacles.some(o=>{const dx=o.x-x,dz=o.z-z;return dx*dx+dz*dz<(o.r+d)**2;});
   const trees=(list,n,minD,trunk,s0,s1,clr)=>{let tries=0;while(list.length<n&&tries<n*10){tries++;const x=R(-WR-4,WR+4),z=R(-WR-4,WR+4);
     if(!ok(x,z,2)||(clr&&inClear(x,z))||near(x,z,minD))continue;const t={x,z,ry:R(0,TAU),s:R(s0,s1)};list.push(t);obstacles.push({x,z,r:trunk*t.s,tree:true});}};
@@ -830,7 +877,7 @@ if(MAP==='orman'){
   scat(FOREST.rock,90,1,['rock1','rock4'],.7,1.3,1.6);
   scat(FOREST.rock,260,0,['rock2','rock3'],.8,2.2,0);
   const noGr=ZONES.filter(z=>/swamp|portal|ice/.test(z.id));
-  for(let i=0,NG=isTouch?15000:34000;i<NG;i++){const x=R(-WR-8,WR+8),z=R(-WR-8,WR+8);const d2=x*x+z*z;if(d2<9*9||d2>(WR+14)**2)continue;if(noGr.some(q=>Math.hypot(q.x-x,q.z-z)<(q.id==='ice'?27:21)))continue;FOREST.grass.push({x,z,ry:R(0,TAU),s:R(.7,1.5)});}
+  for(let i=0,NG=isTouch?15000:34000;i<NG;i++){const x=R(-WR-8,WR+8),z=R(-WR-8,WR+8);const d2=x*x+z*z;if(d2<9*9||d2>(WR+14)**2)continue;if(noGr.some(q=>Math.hypot(q.x-x,q.z-z)<(q.id==='ice'?27:21)))continue;if(ARENA&&arenaClear(x,z)<-.5)continue;FOREST.grass.push({x,z,ry:R(0,TAU),s:R(.7,1.5)});}
 }
 // scatter
 for(let i=0;i<(FOR?30:70);i++){const p=spot(1.6);if(p)pillar(p[0],p[1],R(3,8),rng()<.5);}
@@ -1354,7 +1401,7 @@ function addInstances(src,list,matFn,opt={}){
 }
 let chunkT=0;
 function updChunks(dt){WINDU.value+=dt;updLazy(dt);chunkT-=dt;if(chunkT>0)return;chunkT=.3;const px=P.pos.x,pz=P.pos.z;for(const c of chunks){const v=Math.hypot(c.x-px,c.z-pz)<c.far;for(const m of c.ms)m.visible=v;}}
-if(MAP==='orman'){
+if(FOR){
   // grass clumps (v2: zich, rangli, shamolda tebranadi)
   const gTex=canvasTex(512,512,(g,w,h)=>{
     for(let i=0;i<150;i++){const x=20+Math.random()*(w-40),hh=h*(.35+Math.random()*.62),bend=(Math.random()-.5)*(60+hh*.25),bw=5+Math.random()*7;
@@ -1387,7 +1434,7 @@ function buildForest(){
       const list=[...FOREST.bush,...FOREST.plant,...FOREST.rock].filter(t=>t.type===ty);addInstances(src,list,n=>forestMat(n,false),{shadow:/rock/.test(ty),tint:/rock/.test(ty)?null:[.27,.08,.14],far:/rock/.test(ty)?70:40});}
     window.__jungle=1;},e=>console.warn(e));
 }
-if(MAP==='orman')buildForest();
+if(FOR)buildForest();
 
 const floaters=[];
 // v8 landmark loading
@@ -1812,7 +1859,7 @@ function makeEnemy(type){
     state:'spawn',t:0,kx:0,kz:0,face:0,flash:0,atkCd:rnd(.4,1.2),phase:rnd(0,TAU),dead:false,hitPlayer:false};
 }
 function spawnEnemy(type){
-  let x=0,z=0;
+  let x=0,z=0;if(ARENA){const p=arenaSpawnPos();x=p.x+rnd(-3,3);z=p.z+rnd(-3,3);const e=makeEnemy(type);e.g.position.set(x,-2.5,z);e.face=Math.atan2(P.pos.x-x,P.pos.z-z);enemies.push(e);ring(x,z,2.5*e.sc,.9,1.2,.3,2);return;}
   for(let i=0;i<30;i++){const a=rnd(0,TAU),d=rnd(15,24);x=P.pos.x+Math.sin(a)*d;z=P.pos.z+Math.cos(a)*d;
     if(x*x+z*z>WR*WR){const k=WR/Math.hypot(x,z)*.95;x*=k;z*=k;}
     if(!lavaAt(x,z,1.5)&&!obstacles.some(o=>(o.x-x)**2+(o.z-z)**2<(o.r+1.5)**2))break;}
@@ -1853,7 +1900,7 @@ function damagePlayer(dmg,fromX,fromZ){
   if(P.hp<=0){P.hp=0;P.state='dead';P.deadT=0;rope.pinned=false;sfx.die();}
 }
 function hitEnemy(e,dmg,kx,kz,kb,heavy,noStop){
-  if(e.dead||e.state==='spawn')return;
+  if(e.dead||e.state==='spawn')return;if(e.tower){kb=0;if(e.invuln){if(Math.random()<.2)dmgText(e.g.position.x,3,e.g.position.z,'HIMOYALANGAN','');return;}}
   dmg*=P.dmgMul;const crit=Math.random()<.13;if(crit)dmg*=1.8;dmg=Math.round(dmg*rnd(.92,1.08));
   e.hp-=dmg;e.flash=noStop?.3:1;P.rage=Math.min(100,P.rage+4.5);
   const kbm=e.boss?.15:e.big?.4:1;e.kx+=kx*kb*kbm;e.kz+=kz*kb*kbm;
@@ -1864,7 +1911,7 @@ function hitEnemy(e,dmg,kx,kz,kb,heavy,noStop){
   if(!noStop){hitStop=Math.max(hitStop,crit||heavy?.075:.045);shake=Math.max(shake,crit||heavy?.32:.18);kick(hx-P.pos.x,hz-P.pos.z,crit||heavy?.32:.16);if(crit||heavy)zoomPunch=Math.max(zoomPunch,crit?.08:.06);}else shake=Math.max(shake,.06);
   comboCount++;comboT=2.2;sfx.hit(crit);if(e.hp>0)sfx.pain(e);
   if(e.hp<=0){killEnemy(e,kx,kz);return;}
-  if(!e.big||heavy||dmg>=26){if(!(e.boss&&!heavy)){e.state='stagger';e.t=0;}}
+  if(!e.tower&&(!e.big||heavy||dmg>=26)){if(!(e.boss&&!heavy)){e.state='stagger';e.t=0;}}
 }
 
 let streakN=0,streakT=0,firstBlood=false,hbT=0;
@@ -1890,7 +1937,7 @@ function killEnemy(e,kx,kz){
   if(e.boss){for(let i=0;i<6;i++)dropOrb(x,z);ring(x,z,9,1,2,.6,3);shake=.8;zoomPunch=Math.max(zoomPunch,.15);}
   else if(e.big){dropOrb(x,z);if(Math.random()<.5)dropOrb(x,z);}
   else if(Math.random()<.22)dropOrb(x,z);
-  sfx.kill(e);onKillStreak();if(e.zone)onZoneBossDead(e);gainXp(e.boss?320:e.big?70:e.type==='ram'?35:24);
+  sfx.kill(e);if(e.tower){onTowerDead(e);e.t=0;return;}onKillStreak();if(e.zone)onZoneBossDead(e);gainXp(e.boss?320:e.big?70:e.type==='ram'?35:24);
 }
 
 // ---- weapon path ----
@@ -2241,7 +2288,7 @@ function animHero(dt){
 function updEnemies(dt){
   const px=P.pos.x,pz=P.pos.z;
   for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];e.t+=dt;const g=e.g,pos=g.position;
-    e.flash=Math.max(0,e.flash-dt*5);e.skin.emissiveIntensity=e.flash*.55;
+    e.flash=Math.max(0,e.flash-dt*5);if(e.tower)continue;e.skin.emissiveIntensity=e.flash*.55;
     // knockback
     pos.x+=e.kx*dt;pos.z+=e.kz*dt;const kd=Math.exp(-dt*7);e.kx*=kd;e.kz*=kd;
     const dx=px-pos.x,dz=pz-pos.z,dist=Math.hypot(dx,dz);
@@ -2303,8 +2350,8 @@ function updEnemies(dt){
     if(e.hp<e.maxHp&&!e.dead){e.bar.visible=true;e.bar.position.set(pos.x,pos.y+2.15*e.sc,pos.z);e.bar.quaternion.copy(camera.quaternion);e.fg.scale.x=Math.max(.001,e.hp/e.maxHp);}
   }
   // separation
-  for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.dead)continue;const ap=a.g.position;
-    for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.dead)continue;const bp=b.g.position;const dx=bp.x-ap.x,dz=bp.z-ap.z,rr=a.r+b.r+.1,d2=dx*dx+dz*dz;
+  for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.dead||a.tower)continue;const ap=a.g.position;
+    for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.dead||b.tower)continue;const bp=b.g.position;const dx=bp.x-ap.x,dz=bp.z-ap.z,rr=a.r+b.r+.1,d2=dx*dx+dz*dz;
       if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),k=(rr-d)/d*.5;ap.x-=dx*k;ap.z-=dz*k;bp.x+=dx*k;bp.z+=dz*k;}}
     const dx=ap.x-P.pos.x,dz=ap.z-P.pos.z,rr=a.r+.5,d2=dx*dx+dz*dz;if(d2<rr*rr&&d2>1e-6&&P.state!=='dead'){const d=Math.sqrt(d2),k=(rr-d)/d;ap.x+=dx*k;ap.z+=dz*k;}}
 }
@@ -2340,7 +2387,7 @@ function onZoneBossDead(e){const zn=e.zone;if(!zn)return;zn.cleared=true;saveZon
   for(let i=0;i<5;i++)dropOrb(e.g.position.x+rnd(-2,2),e.g.position.z+rnd(-2,2));
   if(ZONES.every(z=>z.cleared))setTimeout(()=>showBanner("SEHRLI O'RMON OZOD!","Barcha bosslar mag'lub etildi"),2600);}
 function updZones(dt){
-  if(!ZONES.length)return;let inZ=null;
+  if(!ZONES.length&&!RESTS.length)return;let inZ=null;
   for(const zn of ZONES){const d=Math.hypot(P.pos.x-zn.x,P.pos.z-zn.z);if(d<zn.r+6)inZ=zn;
     if(d<zn.r&&!zn.started&&!zn.cleared){zn.started=true;showBanner(zn.name,'BOSS: '+zn.boss.name);setTimeout(()=>sfx.roar(),600);
       zn.bossE=makeZoneBoss(zn);for(let i=0;i<4;i++){const a=i/4*TAU;spawnEnemyAt(zn.minion,zn.x+Math.sin(a)*7,zn.z+Math.cos(a)*7);}}
@@ -2367,9 +2414,79 @@ function updZones(dt){
   const bb=$('bossbar');let tgt=null,bd=1e9;for(const zn of ZONES){const e=zn.bossE;if(e&&!e.dead){const d=Math.hypot(P.pos.x-e.g.position.x,P.pos.z-e.g.position.z);if(d<45&&d<bd){bd=d;tgt=e;}}}
   if(tgt){bb.classList.add('on');$('bossName').textContent=tgt.zname;$('bossFill').style.width=Math.max(0,tgt.hp/tgt.maxHp*100)+'%';}else bb.classList.remove('on');
 }
+// ================= ARENA: minoralar, o'qlar, g'alaba =================
+const AR_T=[],TBOLT=[];let arenaWon=false;
+const tBoltGeo=new THREE.SphereGeometry(.32,10,8);
+const tBoltMat={blue:new THREE.MeshBasicMaterial({color:new THREE.Color(.5,1.6,3)}),red:new THREE.MeshBasicMaterial({color:new THREE.Color(3,.9,.3)})};
+function makeTower(tp){
+  const blue=tp.team==='blue',core=tp.kind==='core';const g=new THREE.Group();g.position.set(tp.x,0,tp.z);
+  const skin=new THREE.MeshStandardMaterial({color:blue?0x6a84a6:0x9c6a5c,roughness:.75,metalness:.15,flatShading:true,emissive:0xff3010,emissiveIntensity:0});
+  const trim=new THREE.MeshStandardMaterial({color:blue?0xb8c8e0:0xd8b090,roughness:.5,metalness:.5,flatShading:true});
+  const crysM=new THREE.MeshStandardMaterial({color:blue?0x80d0ff:0xff7a4a,emissive:blue?0x2a90ff:0xff3a10,emissiveIntensity:2.4,roughness:.15,flatShading:true});
+  const add=(geo,m,x,y,z,sx=1,sy=sx,sz=sx,rx=0,ry=0,rz=0)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);o.castShadow=true;o.receiveShadow=true;g.add(o);return o;};
+  let crys;
+  if(core){add(new THREE.CylinderGeometry(3.2,3.8,2.2,6),skin,0,2.2,0);add(new THREE.CylinderGeometry(2.2,2.8,2,6),trim,0,4.2,0);
+    for(let i=0;i<6;i++){const a=i/6*TAU;add(new THREE.ConeGeometry(.55,4.2,5),skin,Math.sin(a)*3.4,4.2,Math.cos(a)*3.4,1,1,1,Math.cos(a)*-.25,0,Math.sin(a)*.25);}
+    crys=add(new THREE.OctahedronGeometry(1.9,0),crysM,0,8.2,0,1,1.7,1);}
+  else{const H=tp.kind==='base'?7.2:6.2;add(new THREE.CylinderGeometry(1.25,1.75,H,8),skin,0,1.1+H/2,0);add(new THREE.CylinderGeometry(1.85,1.6,.7,8),trim,0,1.1+H+.3,0);
+    for(let i=0;i<4;i++){const a=i/4*TAU+PI/4;add(new THREE.ConeGeometry(.28,1.6,5),trim,Math.sin(a)*1.6,1.1+H+1,Math.cos(a)*1.6,1,1,1,Math.cos(a)*-.35,0,Math.sin(a)*.35);}
+    for(let k=0;k<3;k++)add(new THREE.BoxGeometry(2.7,.22,2.7),trim,0,1.6+k*H/3,0,1,1,1,0,k*.5,0);
+    crys=add(new THREE.OctahedronGeometry(.85,0),crysM,0,1.1+H+2.1,0,1,1.6,1);}
+  crys.castShadow=false;const light=new THREE.PointLight(blue?0x4aa8ff:0xff5a2a,core?40:14,core?26:15,1.6);light.position.copy(crys.position);g.add(light);
+  scene.add(g);
+  const bar=new THREE.Group();const bg=new THREE.Mesh(new THREE.PlaneGeometry(1.08,.2),hpBgMat);bg.renderOrder=10;bar.add(bg);
+  const fgM=new THREE.MeshBasicMaterial({depthTest:false});if(blue)fgM.color.setRGB(.3,1.2,2.2);else fgM.color.setRGB(2,.35,.15);
+  const fg=new THREE.Mesh(hpFgGeo,fgM);fg.position.set(-.5,0,.001);fg.renderOrder=11;bar.add(fg);bar.scale.setScalar(core?3.4:2.4);bar.visible=!blue;scene.add(bar);
+  const hp=core?2600:tp.kind==='base'?1500:1000;
+  return {type:'tower',tower:true,team:tp.team,kind:tp.kind,tp,g,body:g,head:g,arms:[],legs:[],skin,bar,fg,big:true,boss:false,sc:1,hp,maxHp:hp,dmg:14,r:core?4.6:2.4,range:0,
+    state:'idle',t:0,kx:0,kz:0,face:0,flash:0,dead:false,crys,crysY:crys.position.y,shootT:rnd(.4,1.2),invuln:core,topY:crys.position.y};
+}
+function arenaSetup(){
+  for(const t of AR_T){if(t.team==='blue'){scene.remove(t.g);scene.remove(t.bar);}}AR_T.length=0;
+  for(const b of TBOLT)scene.remove(b.m);TBOLT.length=0;arenaWon=false;
+  for(const tp of AR_TP){const t=makeTower(tp);AR_T.push(t);if(t.team==='red')enemies.push(t);}
+}
+function towerShoot(t,target,isP){const m=new THREE.Mesh(tBoltGeo,tBoltMat[t.team]);m.position.set(t.g.position.x,t.topY,t.g.position.z);scene.add(m);
+  TBOLT.push({m,t,target,isP,dmg:t.kind==='core'?26:t.kind==='base'?20:15});sfx.shot&&sfx.shot();}
+function updArena(dt){
+  if(!ARENA)return;
+  for(let i=AR_T.length-1;i>=0;i--){const t=AR_T[i];
+    if(t.dead){t.t+=dt;t.g.position.y-=dt*2.4;t.g.rotation.z=Math.sin(t.t*9)*.05*(1-t.t/2.5);if(Math.random()<.6)emit(t.g.position.x+rnd(-2,2),rnd(.5,3),t.g.position.z+rnd(-2,2),rnd(-1,1),rnd(1,3),rnd(-1,1),1,.3,.6,.55,.5,0,1);
+      if(t.t>2.6){scene.remove(t.g);scene.remove(t.bar);const k=enemies.indexOf(t);if(k>=0)enemies.splice(k,1);AR_T.splice(i,1);}continue;}
+    t.crys.rotation.y+=dt*1.4;t.crys.position.y=t.crysY+Math.sin(timeNow*2+i)*.25;
+    if(t.team==='red'){t.skin.emissiveIntensity=t.flash*.55;
+      if(t.hp<t.maxHp||t.kind==='core'){t.bar.visible=true;t.bar.position.set(t.g.position.x,t.topY+1.8,t.g.position.z);t.bar.quaternion.copy(camera.quaternion);t.fg.scale.x=Math.max(.001,t.hp/t.maxHp);}
+      t.fg.material.color.setRGB(t.invuln?.9:2,t.invuln?.9:.35,t.invuln?.9:.15);
+      const d=Math.hypot(P.pos.x-t.g.position.x,P.pos.z-t.g.position.z);t.shootT-=dt;
+      if(d<17&&P.state!=='dead'&&t.shootT<=0){t.shootT=t.kind==='core'?.9:1.25;towerShoot(t,P,true);}}
+    else{t.shootT-=dt;if(t.shootT<=0){let best=null,bd=16;for(const e of enemies){if(e.dead||e.tower||e.state==='spawn')continue;const d=Math.hypot(e.g.position.x-t.g.position.x,e.g.position.z-t.g.position.z);if(d<bd){bd=d;best=e;}}
+      if(best){t.shootT=1.1;towerShoot(t,best,false);}else t.shootT=.3;}}}
+  // asosiy minoralar qulasa taxt ochiladi
+  const core=AR_T.find(t=>t.kind==='core'&&!t.dead);if(core&&core.invuln&&!AR_T.some(t=>t.team==='red'&&t.kind==='base'&&!t.dead)){core.invuln=false;showBanner('TAXT OCHILDI',"Dushman taxt toshini qulating!");sfx.horn&&sfx.horn();}
+  // o'qlar
+  for(let i=TBOLT.length-1;i>=0;i--){const b=TBOLT[i],m=b.m;const tg=b.target;const tx=b.isP?P.pos.x:tg.g.position.x,tz=b.isP?P.pos.z:tg.g.position.z,ty=b.isP?1.2+(P.gh||0)+P.y:1.1+tg.g.position.y;
+    if(!b.isP&&tg.dead){scene.remove(m);TBOLT.splice(i,1);continue;}
+    const dx=tx-m.position.x,dy=ty-m.position.y,dz=tz-m.position.z,d=Math.hypot(dx,dy,dz),sp=30*dt;
+    if(Math.random()<.8)emit(m.position.x,m.position.y,m.position.z,rnd(-.4,.4),rnd(-.4,.4),rnd(-.4,.4),.35,.18,b.t.team==='blue'?.4:2.8,b.t.team==='blue'?1.3:.8,b.t.team==='blue'?2.8:.3,0,1);
+    if(d<=sp+.4){scene.remove(m);TBOLT.splice(i,1);burst(tx,ty,tz,10,5,.35,.1,b.t.team==='blue'?.5:3,b.t.team==='blue'?1.4:.9,b.t.team==='blue'?2.8:.3,10);
+      if(b.isP)damagePlayer(b.dmg*(1+(wave-1)*.04),b.t.g.position.x,b.t.g.position.z);
+      else{tg.hp-=34;tg.flash=1;dmgText(tx,ty+1,tz,34,'');if(tg.hp<=0&&!tg.dead)killEnemy(tg,0,0);}continue;}
+    m.position.x+=dx/d*sp;m.position.y+=dy/d*sp;m.position.z+=dz/d*sp;}
+  // yo'nalish strelkasi: eng yaqin dushman minorasi
+  {const za=$('zArrow');let nz=null,nd=1e9;for(const t of AR_T){if(t.dead||t.team!=='red'||(t.invuln&&AR_T.some(q=>q.team==='red'&&q.kind!=='core'&&!q.dead)))continue;const d=Math.hypot(P.pos.x-t.g.position.x,P.pos.z-t.g.position.z);if(d<nd){nd=d;nz=t;}}
+   if(nz&&nd>18&&running&&!arenaWon){za.classList.add('on');const dx=(nz.g.position.x-P.pos.x)/nd,dz=(nz.g.position.z-P.pos.z)/nd;const a0=new V3(P.pos.x,0,P.pos.z).project(camera),a1=new V3(P.pos.x+dx*6,0,P.pos.z+dz*6).project(camera);
+     const sa=Math.atan2(-(a1.y-a0.y)*innerHeight,(a1.x-a0.x)*innerWidth);za.firstChild.style.transform=`rotate(${(-sa*180/PI).toFixed(0)}deg)`;za.lastChild.textContent=(nz.kind==='core'?'TAXT TOSHI':'MINORA')+' · '+Math.round(nd)+' m';}else za.classList.remove('on');}
+  // taxt jon chizig'i
+  if(core&&Math.hypot(P.pos.x-core.g.position.x,P.pos.z-core.g.position.z)<40){const bb=$('bossbar');bb.classList.add('on');$('bossName').textContent=core.invuln?'TAXT TOSHI (himoyalangan)':'TAXT TOSHI';$('bossFill').style.width=Math.max(0,core.hp/core.maxHp*100)+'%';}
+}
+function onTowerDead(t){if(t.kind==='core'){arenaWon=true;score+=3000;setTimeout(()=>{showBanner("G'ALABA!","Dushman qal'asi qulatildi");announce('VICTORY','Victory!');},900);for(const e of enemies)if(!e.tower&&!e.dead)killEnemy(e,0,0);}
+  else{showBanner('MINORA QULADI',t.kind==='base'?"Qal'a himoyasi zaiflashdi":"Yo'lak ochildi");gainXp(120);score+=400;}}
+function arenaSpawnPos(){let best=null,bd=1e9;for(const L of AR.lanes)for(let t=1;t>=0;t-=.03){const p=polyAt(L,t);const d=Math.hypot(p.x-P.pos.x,p.z-P.pos.z);if(d>=34&&d<bd&&t>.2){bd=d;best=p;}if(d<34)break;}
+  return best||polyAt(AR.lanes[1],.9);}
 function updWaves(dt){
+  if(ARENA&&arenaWon)return;
   if(spawnQ.length){spawnT-=dt;if(spawnT<=0){spawnT=wave<3?.55:.35;spawnEnemy(spawnQ.shift());}return;}
-  if(enemies.every(e=>e.dead)){waveTimer-=dt;if(waveTimer<=0){waveTimer=3.2;startWave(wave+1);}}
+  if(enemies.every(e=>e.dead||e.tower)){waveTimer-=dt;if(waveTimer<=0){waveTimer=3.2;startWave(wave+1);}}
 }
 
 // ================= UI =================
@@ -2394,6 +2511,9 @@ function drawMini(){
   for(const [k,l] of lavaGrid){for(let i=0;i<l.length;i+=2){const s=l[i];const x=cx+(s.x-px)*sc,y=cx+(s.z-pz)*sc;if(x<-10||x>S+10||y<-10||y>S+10)continue;c.beginPath();c.arc(x,y,s.w*sc,0,TAU);c.fill();}}
   c.fillStyle='#6b6258';
   for(const o of obstacles){const x=cx+(o.x-px)*sc,y=cx+(o.z-pz)*sc;if(x<-o.r*sc||x>S+o.r*sc||y<-o.r*sc||y>S+o.r*sc)continue;c.fillStyle=o.tree?'#1d4a1c':'#6b6258';if(o.box){c.save();c.translate(x,y);c.rotate(-o.ry);c.fillRect(-o.box.hx*sc,-o.box.hz*sc,o.box.hx*2*sc,o.box.hz*2*sc);c.restore();continue;}c.beginPath();c.arc(x,y,Math.max(1.5,o.r*sc),0,TAU);c.fill();}
+  if(ARENA){c.lineCap='round';const pl=(pts,col,w)=>{c.strokeStyle=col;c.lineWidth=w;c.beginPath();pts.forEach(([x,z],i)=>{const X=cx+(x-px)*sc,Y=cx+(z-pz)*sc;i?c.lineTo(X,Y):c.moveTo(X,Y);});c.stroke();};
+    pl(AR.river,'rgba(60,150,220,.75)',Math.max(2,10*sc));for(const L of AR.lanes)pl(L,'rgba(200,160,100,.8)',Math.max(2,8*sc));
+    for(const t of AR_T){if(t.dead)continue;const X=cx+(t.g.position.x-px)*sc,Y=cx+(t.g.position.z-pz)*sc;c.fillStyle=t.team==='blue'?'#4aa8ff':'#ff4a2a';const q=t.kind==='core'?5:3.5;c.fillRect(X-q,Y-q,q*2,q*2);}}
   for(const zn of ZONES){const x=cx+(zn.x-px)*sc,y=cx+(zn.z-pz)*sc;c.strokeStyle=zn.cleared?'#4ade80':zn.started?'#ff5a3c':'#ffd27a';c.lineWidth=2;c.beginPath();c.arc(x,y,zn.r*sc,0,TAU);c.stroke();
     if(!zn.cleared){c.fillStyle='#ff5a3c';c.font='bold 13px Inter,sans-serif';c.textAlign='center';c.fillText('☠',x,y+4);}}
   for(const r of RESTS){const x=cx+(r.x-px)*sc,y=cx+(r.z-pz)*sc;c.fillStyle='#6aff9a';c.beginPath();c.arc(x,y,3.5,0,TAU);c.fill();}
@@ -2617,7 +2737,7 @@ if(!isTouch)$('hint').textContent='WASD yurish · J zarba/o\'q · Q qurol · K a
 // ================= GAME FLOW =================
 function resetGame(){
   for(const e of enemies)removeEnemy(e);enemies.length=0;for(const o of orbs)scene.remove(o.m);orbs.length=0;
-  Object.assign(P,{lvl:1,xp:0,dmgMul:1,maxHp:100,spinCd:0,hp:100,rage:0,state:'move',t:0,combo:0,inv:0,y:0,face:PI,deadT:0,dodgeCd:0});P.pos.set(0,0,0);P.vel.set(0,0,0);
+  Object.assign(P,{lvl:1,xp:0,dmgMul:1,maxHp:100,spinCd:0,hp:100,rage:0,state:'move',t:0,combo:0,inv:0,y:0,face:PI,deadT:0,dodgeCd:0});P.pos.set(0,0,0);P.vel.set(0,0,0);if(ARENA){P.pos.set(AR.blue.x+12,0,AR.blue.z-12);P.face=PI*.75;arenaSetup();}
   hero.body.rotation.set(0,0,0);hero.body.position.set(0,0,0);
   score=0;wave=0;kills=0;comboCount=0;spawnQ=[];waveTimer=1.2;
   hero.root.position.set(0,0,0);hero.root.rotation.y=P.face;ropeReset();
@@ -2652,7 +2772,7 @@ function frame(now){
     hero.root.updateMatrixWorld(true);hero.tip.getWorldPosition(handW);
     if(rope.pinned){rope.len=Math.max(1.4,handW.distanceTo(rope.target)*1.04);}else rope.len=lerp(rope.len,1.45,Math.min(1,dt*6));
     updRope(dt);
-    for(const e of enemies){e.g.position.y-=e.ghA||0;e.ghA=0;}updEnemies(dt);for(const e of enemies){const g=groundH(e.g.position.x,e.g.position.z);e.ghRaw=g;const cur=e.gh||0;e.gh=g>cur?Math.min(g,cur+dt*9+(g-cur)*.35):Math.max(g,cur-dt*12);e.ghA=e.gh;e.g.position.y+=e.gh;}updWaves(dt);updZones(dt);updOrbs(dt);updBullets(dt);updStrikes(dt);
+    for(const e of enemies){e.g.position.y-=e.ghA||0;e.ghA=0;}updEnemies(dt);for(const e of enemies){if(e.tower)continue;const g=groundH(e.g.position.x,e.g.position.z);e.ghRaw=g;const cur=e.gh||0;e.gh=g>cur?Math.min(g,cur+dt*9+(g-cur)*.35):Math.max(g,cur-dt*12);e.ghA=e.gh;e.g.position.y+=e.gh;}updWaves(dt);updZones(dt);updArena(dt);updOrbs(dt);updBullets(dt);updStrikes(dt);
     drumT-=dt;if(drumT<=0&&enemies.some(e=>!e.dead)){drumT=.9;sfx.drum(.6);}
     if(P.hp>0&&P.hp<P.maxHp*.3){hbT-=dt;if(hbT<=0){hbT=.9;sfx.heart();}}
     if(P.state==='dead'&&P.deadT>1.6&&$('over').classList.contains('hide')){$('overStats').textContent=`${wave}-to'lqin  ·  ${kills} ta jin  ·  ${score} ochko`;$('over').classList.remove('hide');}
@@ -2732,7 +2852,7 @@ requestAnimationFrame(frame);
 $('goBtn').disabled=false;$('goBtn').textContent='JANGNI BOSHLASH';
 if(FOR){const pp=document.querySelector('#start .panel p');if(pp)pp.textContent="Qahramoningni tanla va qadimiy o'rmonga kir. Daraxtlar orasidan goblinlar, qo'chqorlar va olovli ajdar yopirilib kelmoqda. Zanjirli gurzingni aylantir va ularni to'lqinma-to'lqin yanchib tashla.";}
 document.getElementById('mapSub').textContent=FOR?'QADIMIY O\'RMON':'LAVA XAROBALARI';
-window.__game={get joy(){return joy},PLATS,WALLS,groundH,get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
+window.__game={AR_T,AR,arenaSetup,get arenaWon(){return arenaWon},get joy(){return joy},PLATS,WALLS,groundH,get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
 </script>
 </body>
 </html>
