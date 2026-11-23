@@ -194,7 +194,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <div class="btn" id="bA"><div><svg viewBox="0 0 24 24" fill="none" stroke="#f6e6c6" stroke-width="2" stroke-linecap="round"><circle cx="17" cy="7" r="3.2"/><path d="M14.7 9.3 5 19M4 16l4 4"/><path d="M19.5 3.5l1 -1M21 7h1.4M17 2.6V1.2"/></svg>ZARBA</div></div>
     <div class="btn" id="bS"><div><svg viewBox="0 0 24 24" fill="none" stroke="#f6e6c6" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M17 2v4h-4"/></svg>AYLANMA</div><div class="cd"></div></div>
     <div class="btn" id="bD"><div><svg viewBox="0 0 24 24" fill="none" stroke="#f6e6c6" stroke-width="2" stroke-linecap="round"><path d="M4 12h11M11 7l5 5-5 5M19 5v14"/></svg>QOCHISH</div><div class="cd"></div></div>
-    <div class="btn" id="bW"><div><svg viewBox="0 0 24 24" fill="none" stroke="#f6e6c6" stroke-width="2" stroke-linecap="round"><path d="M3 17l8-8M9 7l4-4 4 4-4 4zM14 14h7v3h-4l-1 3h-2z"/></svg>QUROL</div></div>
+    <div class="btn" id="bW"><div><svg viewBox="0 0 24 24" fill="none" stroke="#f6e6c6" stroke-width="2" stroke-linecap="round"><path d="M3 17l8-8M9 7l4-4 4 4-4 4zM14 14h7v3h-4l-1 3h-2z"/></svg>QUROL</div><div class="cd"></div></div>
     <div class="btn" id="bX"><div><svg viewBox="0 0 24 24" fill="none" stroke="#ffcf5a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/></svg><span id="superLbl">SUPER</span></div><div class="cd"></div></div>
   </div>
 </div>
@@ -207,7 +207,7 @@ body.lobby #hud,body.lobby #hud2{display:none}
     <p>Qahramoningni tanla: ninja, Valkiriya, Sarkarda, Nova, Malika, askar yoki viking. Jinlar qo'shini bosib kelmoqda. Zanjirli gurzingni aylantir, ularni to'lqinma-to'lqin yanchib tashla. Lava tomirlaridan ehtiyot bo'l.</p>
     <button class="go" id="goBtn" disabled>YUKLANMOQDA…</button>
     <button id="fsBtn" style="display:none;margin:8px auto 0;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,200,120,.5);background:rgba(0,0,0,.4);color:#ffd27a;font:700 13px Inter,sans-serif">⛶ To'liq ekran</button>
-    <div id="verTag">v3.7 · Uch yo'l arena · 23.11</div>
+    <div id="verTag">v3.8 · 5 yangi qahramon · 23.11</div>
     <div class="tabs" id="ltabs">
       <button data-t="hero" class="on">Qahramon</button><button data-t="wpn">Qurollar</button><button data-t="keys">Boshqaruv</button><button data-t="set" id="setBtn">Sozlamalar</button>
     </div>
@@ -220,6 +220,11 @@ body.lobby #hud,body.lobby #hud2{display:none}
       <div class="hcard" data-h="bride"><b>M</b><span>MALIKA</span><i>Oq libosdagi qiz</i></div>
       <div class="hcard" data-h="soldier"><b>A</b><span>ARVOH</span><i>Ghillie askar</i></div>
       <div class="hcard" data-h="viking"><b>B</b><span>BJORN</span><i>Viking</i></div>
+      <div class="hcard" data-h="monk"><b>B</b><span>BAHODIR</span><i>Mushtlashuvchi rohib</i></div>
+      <div class="hcard" data-h="hammer"><b>T</b><span>TOSHBOLTA</span><i>Bolg'achi pakana</i></div>
+      <div class="hcard" data-h="archer"><b>O</b><span>OYDIN</span><i>Kamonchi qiz</i></div>
+      <div class="hcard" data-h="sorc"><b>Q</b><span>QORBEKA</span><i>Muz sehrgari</i></div>
+      <div class="hcard" data-h="witch"><b>Z</b><span>ZULFIYA</span><i>Qora jodugar</i></div>
       </div>
     </div>
     <div class="tab" id="tab-wpn"><div id="wpnList"></div></div>
@@ -1311,25 +1316,49 @@ const HERO_CFG={
 };
 
 // ---- v8: textured Tripo heroes (normalized at load) ----
-function normGeo(geo,H){geo.computeBoundingBox();const b=geo.boundingBox;geo.translate(-(b.min.x+b.max.x)/2,-b.min.y,-(b.min.z+b.max.z)/2);const s=H/(b.max.y-b.min.y);geo.scale(s,s,s);return geo;}
+function deInter(geo){for(const k in geo.attributes){const at=geo.attributes[k];if(at.isInterleavedBufferAttribute)geo.setAttribute(k,at.clone());}return geo;}
+function normGeo(geo,H){deInter(geo);geo.computeBoundingBox();const b=geo.boundingBox;geo.translate(-(b.min.x+b.max.x)/2,-b.min.y,-(b.min.z+b.max.z)/2);const s=H/(b.max.y-b.min.y);geo.scale(s,s,s);return geo;}
 HERO_CFG.valkyrie={file:'m_warrior.js',v:'MWARRIOR_B64',kind:'A',title:'VALKIRIYA',H:2.4,hipX:.15,hipY:1.0,kneeY:.55,headY:2.05,shY:1.85,torsoR:.24,armX:.3,armYmin:1.0,legAmp:.35,
   arm:[[[-.3,1.85],[-.42,1.5],[-.45,1.25],[-.46,1.1]],[[.32,1.85],[.45,1.5],[.5,1.2],[.52,1.05]]]};
 HERO_CFG.warlord={file:'m_demo.js',v:'MDEMO_B64',kind:'A',title:'SARKARDA',H:2.45,hipX:.2,hipY:.98,kneeY:.52,headY:2.05,shY:1.84,torsoR:.27,armX:.32,armYmin:.9,
   arm:[[[-.36,1.84],[-.47,1.45],[-.52,1.15],[-.53,1.0]],[[.36,1.84],[.47,1.45],[.52,1.15],[.53,1.0]]]};
 function makeTexHero(gs,c){const src=firstMesh(gs);normGeo(src.geometry,c.H);src.material.envMapIntensity=.7;c.mat=src.material;return makeBiped(gs,c);}
+// ---- 5 ta yangi qahramon (Tripo galereyasidan) ----
+HERO_CFG.monk={file:'nh_monk.js',v:'NH_MONK_B64',kind:'A',title:'BAHODIR',H:2.4,hipX:.2,hipY:1.0,kneeY:.55,headY:2.02,shY:1.72,torsoR:.32,armX:.5,armYmin:.6,legAmp:.45,
+  arm:[[[-.45,1.72],[-.62,1.35],[-.68,1.0],[-.69,.72]],[[.45,1.72],[.62,1.35],[.66,1.0],[.67,.72]]]};
+HERO_CFG.hammer={file:'nh_viking.js',v:'NH_VIKING_B64',kind:'T',title:'TOSHBOLTA',H:2.4,hipX:.27,hipY:.62,kneeY:.32,headY:1.9,shY:1.56,shX:.5,elX:.82,handX:1.08,torsoR:.45,armR:.16,legY:.62,armX:.55,armYmin:1.36,down:1.3,legAmp:.7};
+HERO_CFG.archer={file:'nh_archer.js',v:'NH_ARCHER_B64',kind:'T',title:'OYDIN',H:2.4,hipX:.19,hipY:.95,kneeY:.5,headY:2.05,shY:1.86,shX:.2,elX:.55,handX:.95,torsoR:.17,armR:.065,legY:.95,armX:.22,armYmin:1.74,down:1.38};
+HERO_CFG.sorc={file:'nh_sorc.js',v:'NH_SORC_B64',kind:'T',title:'QORBEKA',H:2.4,hipX:.14,hipY:.95,kneeY:.5,headY:2.05,shY:1.82,shX:.28,elX:.6,handX:.95,torsoR:.3,armR:.08,legY:.9,armX:.3,armYmin:1.68,down:1.3,legAmp:.35,
+  prop:{side:1,grip:.42,test:(x,y)=>(x>.8&&y<1.95)||(x>.55&&y>=1.93)}};
+HERO_CFG.witch={file:'nh_witch.js',v:'NH_WITCH_B64',kind:'T',title:'ZULFIYA',H:2.4,hipX:.1,hipY:.85,kneeY:.45,headY:1.9,shY:1.65,shX:.25,elX:.45,handX:.72,torsoR:.3,armR:.09,legY:.85,armX:.3,armYmin:1.5,down:1.3,legAmp:.5,
+  prop:{side:-1,grip:.42,test:(x,y)=>x<-.6&&!(y>1.55&&y<1.75&&x>-.74)}};
+function splitGeo(geo,test){const g=geo.index?geo.toNonIndexed():geo;const P_=g.attributes.position,n=P_.count/3;const keepA=[],propA=[];
+  for(let t=0;t<n;t++){let all=true;for(let k=0;k<3;k++){const i=t*3+k;if(!test(P_.getX(i),P_.getY(i),P_.getZ(i))){all=false;break;}}(all?propA:keepA).push(t);}
+  const mk=tris=>{const o=new THREE.BufferGeometry();for(const name in g.attributes){const a=g.attributes[name],sz=a.itemSize,arr=new a.array.constructor(tris.length*3*sz);
+    tris.forEach((t,j)=>{for(let k=0;k<3*sz;k++)arr[j*3*sz+k]=a.array[t*3*sz+k];});o.setAttribute(name,new THREE.BufferAttribute(arr,sz,a.normalized));}return o;};
+  return [mk(keepA),propA.length?mk(propA):null];}
+function makeTexTHero(gs,c){const src=firstMesh(gs);normGeo(src.geometry,c.H);let propG=null;
+  if(c.prop){const [b,p]=splitGeo(src.geometry,c.prop.test);src.geometry=b;propG=p;}
+  src.material.envMapIntensity=.7;c.mat=src.material;const h=makeTHero(gs,c);
+  if(propG){const sd=c.prop.side;propG.translate(-sd*c.handX,-c.shY,0);propG.computeBoundingBox();const bb=propG.boundingBox;propG.translate(-(bb.min.x+bb.max.x)/2,-(bb.min.y+(bb.max.y-bb.min.y)*c.prop.grip),-(bb.min.z+bb.max.z)/2);
+    propG.computeVertexNormals();const pm=new THREE.Mesh(propG,c.mat.clone());pm.castShadow=true;pm.userData.shared=true;(h.pendingProps=h.pendingProps||[]).push([pm,sd]);h.prop=pm;}
+  return h;}
 
-const heroes={ninja:null,valkyrie:null,warlord:null,nova:null,bride:null,soldier:null,viking:null};let heroChoice='ninja';
+
+const heroes={ninja:null,valkyrie:null,warlord:null,nova:null,bride:null,soldier:null,viking:null,monk:null,hammer:null,archer:null,sorc:null,witch:null};let heroChoice='ninja';
 function setHero(which){
   heroChoice=which;const next=heroes[which]||heroes.ninja||heroes.soldier||heroes.viking;
   if(next!==hero){const r=hero.root;next.root.position.copy(r.position);next.root.rotation.copy(r.rotation);scene.remove(hero.root);hero=next;scene.add(hero.root);}
   if(typeof mountWeapons==='function')mountWeapons(hero);
   $('heroName').textContent=hero.title;$('portraitL').textContent=hero.title[0];refreshHeroCards();
   {const k=heroKey();const sl=$('superLbl');if(sl)sl.textContent={viking:'OLOV',ninja:'SOYA',nova:'PLAZMA',bride:"BO'RON",soldier:'HAVO',valkyrie:'QILICH',warlord:'ZILZILA'}[k]||'SUPER';}
+  try{nhLabels();}catch(e){}
 }
 
 hero.title='BJORN';heroes.viking=hero;
 loadB64Model('ghillie.js','GHILLIE_B64',g=>{heroes.soldier=makeSoldier(g.scene);if(heroChoice==='soldier')setHero('soldier');window.__soldier=1;},e=>console.warn('Askar yuklanmadi',e));
 loadB64Model('nova.js','NOVA_B64',g=>{heroes.nova=makeTHero(g.scene,HERO_CFG.nova);if(heroChoice==='nova')setHero('nova');window.__nova=1;},e=>console.warn('Nova yuklanmadi',e));
+for(const k of ['monk','hammer','archer','sorc','witch']){const c=HERO_CFG[k];loadB64Model(c.file,c.v,g=>{try{heroes[k]=c.kind==='A'?makeTexHero(g.scene,c):makeTexTHero(g.scene,c);nhProps(k,heroes[k]);if(heroChoice===k)setHero(k);refreshHeroCards();window['__'+k]=1;}catch(e){console.warn(k,e);window.__showErr&&window.__showErr(k+': '+e.message);}},e=>console.warn(k,e));}
 loadB64Model('ram.js','RAM_B64',g=>{rigRam(g.scene);window.__ram=1;},e=>console.warn("Qo'chqor yuklanmadi",e));
 loadB64Model('ninja.js','NINJA_B64',g=>{heroes.ninja=makeBiped(g.scene,HERO_CFG.ninja);if(heroChoice==='ninja')setHero('ninja');window.__ninja=1;},e=>console.warn('Ninja',e));
 loadB64Model('troll.js','TROLL_B64',g=>{rigTroll(g.scene);window.__troll=1;},e=>console.warn('Troll',e));
@@ -1516,7 +1545,7 @@ const WEAPONS=[
   {id:'pistols',name:"QO'SH TO'PPONCHA",type:'gun',rate:8,dmg:11,spread:.03},
   {id:'flail',name:'ZANJIRLI GURZI',type:'melee',reach:1,mul:1},
 ];
-let curW=0;const W=()=>WEAPONS[curW];const isGun=()=>W().type==='gun';
+let curW=0;const W=()=>WEAPONS[curW];const isGun=()=>W().type==='gun'&&!nhActive();
 const steelM=new THREE.MeshStandardMaterial({color:0xd8dde4,metalness:1,roughness:.14});
 const darkM2=new THREE.MeshStandardMaterial({color:0x15161a,metalness:.4,roughness:.55});
 const goldM2=new THREE.MeshStandardMaterial({color:0xb08a2c,metalness:1,roughness:.3});
@@ -1559,7 +1588,7 @@ function mountWeapons(h){
 }
 function applyWeaponVis(){const id=W().id;for(const k in MELEE_MESH)MELEE_MESH[k].visible=id===k;rifle.visible=id==='rifle';pistolR.visible=pistolL.visible=id==='pistols';flailHandle.visible=id==='flail';
   ballG.visible=id==='flail';for(const l of links)l.visible=id==='flail';const el=$('wname');if(el)el.textContent='⚔ '+W().name;}
-function setWeapon(i){curW=(i+WEAPONS.length)%WEAPONS.length;applyWeaponVis();sfx.pickup();if(running)dmgText(P.pos.x,2.9,P.pos.z,W().name,'heal');
+function setWeapon(i){if(nhActive())return;curW=(i+WEAPONS.length)%WEAPONS.length;applyWeaponVis();sfx.pickup();if(running)dmgText(P.pos.x,2.9,P.pos.z,W().name,'heal');
   if(P.state==='atk'||P.state==='spin')P.state='move';}
 // bullets
 const bullets=[];const bulletGeo=new THREE.BoxGeometry(.07,.07,1.1);const bulletMat=new THREE.MeshBasicMaterial({transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});bulletMat.color.setRGB(3,2.2,.7);
@@ -1885,7 +1914,7 @@ function updOrbs(dt){for(let i=orbs.length-1;i>=0;i--){const o=orbs[i];o.t+=dt;
 const SPIN_CD=4,DODGE_CD=1.1;
 const P={spinCd:0,lvl:1,xp:0,dmgMul:1,pos:new V3(),vel:new V3(),face:0,hp:100,maxHp:100,rage:0,state:'move',t:0,prevT:0,combo:0,comboTimer:0,inv:0,dodgeCd:0,
   hits:new Set(),y:0,atkType:0,spinSign:1,dodgeDir:new V3(),impactDone:false,spinRev:0,deadT:0,phase:0,speed:0,lavaTick:0};
-const buf={attack:0,spin:0,dodge:0,special:0};
+const buf={attack:0,spin:0,dodge:0,special:0,sk2:0};
 const held={attack:false};
 let score=0,wave=0,kills=0,comboCount=0,comboT=0;
 let running=false,paused=false,hitStop=0,shake=0,timeNow=0,shakeMul=1,kickX=0,kickZ=0,zoomPunch=0,shakeT=0;
@@ -1992,6 +2021,147 @@ function resolveCollisions(pos,r,curH=0){
   const d=Math.hypot(pos.x,pos.z);if(d>WR){pos.x*=WR/d;pos.z*=WR/d;}
 }
 
+// ================= YANGI QAHRAMONLAR: HUJUM VA QOBILIYATLAR =================
+const NH_KEYS=new Set(['monk','hammer','archer','sorc','witch']);
+const NHcur=()=>NH_KEYS.has(heroKey());
+function nhProps(k,h){
+  if(k==='hammer'){const g=new THREE.Group();const wood=new THREE.MeshStandardMaterial({color:0x5a3a22,roughness:.85}),iron=new THREE.MeshStandardMaterial({color:0x3a3d44,metalness:.8,roughness:.35}),rune=new THREE.MeshBasicMaterial({color:new THREE.Color(.4,1.6,2.6)});
+    const hd=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.15,8),wood);hd.position.y=-.45;g.add(hd);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(.62,.34,.34),iron);head.position.y=-1.0;g.add(head);
+    for(const sd of [-1,1]){const cap=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.08,8),iron);cap.rotation.z=PI/2;cap.position.set(sd*.33,-1.0,0);g.add(cap);}
+    const r=new THREE.Mesh(new THREE.BoxGeometry(.3,.06,.36),rune);r.position.y=-1.0;g.add(r);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.userData.shared=true;}});(h.pendingProps=h.pendingProps||[]).push([g,1]);h.prop=g;}
+  if(k==='archer'){const g=new THREE.Group();const wood=new THREE.MeshStandardMaterial({color:0x6b4426,roughness:.7});
+    const bow=new THREE.Mesh(new THREE.TorusGeometry(.62,.035,6,24,PI*.9),wood);bow.rotation.z=PI/2+PI*.05;bow.position.set(0,-.05,.1);g.add(bow);
+    const str=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.2,3),new THREE.MeshBasicMaterial({color:0xe8e0d0}));str.position.set(0,-.05,-.08);g.add(str);
+    g.traverse(o=>{if(o.isMesh)o.userData.shared=true;});(h.pendingProps=h.pendingProps||[]).push([g,-1]);h.prop=g;}
+  // menyudagi harakat
+  h.lobbyClip={monk:'taunt',hammer:'atk2',archer:'raim',sorc:'cast',witch:'spin'}[k];h.lobbyRate={monk:.55,hammer:.45,archer:1,sorc:.5,witch:.35}[k];
+}
+// ---- qobiliyatlar ta'rifi ----
+const NHS={
+ monk:{basic:{n:'MUSHT',anim:['atk0','atk1','atk2'],dur:.42,melee:[2.5,1.3,[16,16,26]],lunge:3.2},
+   s1:{n:'CHAQMOQ',cd:5,anim:'atk1',dur:.5,dash:16,hits:[[.08,'dashHit',32]]},
+   s2:{n:"BO'RON",cd:7,anim:'spin',dur:.8,hits:[[.25,'aoe',3.6,22,6],[.55,'aoe',3.6,22,8]]},
+   s3:{n:'YER YORISH',cd:16,anim:'jump',dur:1.0,leap:3.2,hits:[[.58,'slam',6.5,75]]}},
+ hammer:{basic:{n:"BOLG'A",anim:['atk0','atk1','atk2'],dur:.56,melee:[2.9,1.4,[22,22,36]],lunge:2.4,heavy:2},
+   s1:{n:'OTISH',cd:6,anim:'atk1',dur:.5,hits:[[.22,'proj','hammer',0,34]]},
+   s2:{n:'CHAQMOQ',cd:8,anim:'cast',dur:.8,hits:[[.35,'thunder',12,3,34]]},
+   s3:{n:'ZILZILA',cd:18,anim:'atk2',dur:1.15,hits:[[.62,'quake',8,90]]}},
+ archer:{basic:{n:"O'Q",anim:'raim',dur:.36,ranged:1,hits:[[.16,'proj','arrow',0,19]]},
+   s1:{n:"5 O'Q",cd:4.5,anim:'raim',dur:.45,ranged:1,hits:[[.18,'fan','arrow',5,.16,17]]},
+   s2:{n:'SAKRASH',cd:6,anim:'roll',dur:.55,back:15,hits:[[.35,'fan','arrow',3,.12,20]]},
+   s3:{n:"YOMG'IR",cd:16,anim:'cast',dur:.9,ranged:1,hits:[[.4,'rain',5,1.8,22]]}},
+ sorc:{basic:{n:'MUZ',anim:'cast',dur:.42,ranged:1,hits:[[.2,'proj','ice',0,21]]},
+   s1:{n:'MUZ HALQA',cd:6,anim:'cast',dur:.6,hits:[[.3,'nova',5.5,28,1.6]]},
+   s2:{n:'NAYZALAR',cd:7,anim:'cast',dur:.8,ranged:1,hits:[[.3,'spikes',7,30]]},
+   s3:{n:"BO'RON",cd:18,anim:'cast',dur:1.0,ranged:1,hits:[[.45,'blizzard',6.5,4,14]]}},
+ witch:{basic:{n:'QORA SHAR',anim:'cast',dur:.4,ranged:1,hits:[[.2,'proj','dark',0,18]]},
+   s1:{n:"LA'NAT",cd:5,anim:'cast',dur:.55,hits:[[.25,'homing',3,26]]},
+   s2:{n:'GALA',cd:8,anim:'spin',dur:.75,hits:[[.35,'ring','dark',10,22]]},
+   s3:{n:'GIRDOB',cd:18,anim:'cast',dur:1.0,ranged:1,hits:[[.45,'vortex',7,3,80]]}},
+};
+const nhDef=()=>NHS[heroKey()];
+function nhStart(slot,inp){const D=nhDef(),d=D[slot];P.state='hsk';P.t=0;P.prevT=0;P.dur=d.dur;
+  let anim=d.anim;if(slot==='basic'&&Array.isArray(d.anim)){P.nhCombo=((P.nhComboT>0?P.nhCombo:-1)+1)%3;anim=d.anim[P.nhCombo];}
+  P.sk={slot,d,anim,done:0,combo:P.nhCombo||0};
+  if(d.ranged||slot==='basic'||d.dash||d.melee)P.face=gunAim(inp);
+  if(d.back){P.face=gunAim(inp);}
+  if(slot!=='basic')P['cd'+slot[1]]=d.cd;
+  P.nhComboT=.9;sfx.whoosh&&sfx.whoosh(slot==='s3'?1.4:1);
+  if(slot==='s3'){shake=Math.max(shake,.2);dmgText(P.pos.x,3.1,P.pos.z,d.n,'crit');}
+}
+function nhTransitions(inp,dt){P.cd1=Math.max(0,(P.cd1||0)-dt);P.cd2=Math.max(0,(P.cd2||0)-dt);P.cd3=Math.max(0,(P.cd3||0)-dt);P.nhComboT=Math.max(0,(P.nhComboT||0)-dt);
+  const st=P.state,D=nhDef();
+  const can=st==='move'||(st==='hsk'&&P.t>P.dur*.7);
+  if(st==='move'||st==='hsk'){
+    if(buf.dodge&&P.dodgeCd<=0&&(st==='move'||P.t>.15)){startDodge(inp);return;}
+    if(can&&buf.special&&P.cd3<=0){buf.special=0;nhStart('s3',inp);return;}
+    if(can&&buf.spin&&P.cd1<=0){buf.spin=0;nhStart('s1',inp);return;}
+    if(can&&buf.sk2&&P.cd2<=0){buf.sk2=0;nhStart('s2',inp);return;}
+    if(can&&(buf.attack||held.attack)&&(st==='move'||P.sk.slot==='basic')){buf.attack=0;nhStart('basic',inp);return;}
+    if(st==='hsk'&&P.t>=P.dur)P.state='move';
+  }else if(st==='dodge'){if(P.t>=P.dur)P.state='move';}
+}
+function nhMove(inp){const sk=P.sk,d=sk.d,fx=Math.sin(P.face),fz=Math.cos(P.face);let tvx=inp.x*1.6,tvz=inp.z*1.6;
+  if(d.lunge&&P.t<.2){tvx+=fx*d.lunge*(1-P.t/.2)*1.6;tvz+=fz*d.lunge*(1-P.t/.2)*1.6;}
+  if(d.dash&&P.t<.3){tvx=fx*d.dash;tvz=fz*d.dash;if(Math.random()<.9)emit(P.pos.x,1,P.pos.z,rnd(-1,1),rnd(0,1),rnd(-1,1),.35,.25,2.4,1.6,.5,0,1);}
+  if(d.back&&P.t<.35){tvx=-fx*d.back*(1-P.t/.35);tvz=-fz*d.back*(1-P.t/.35);}
+  if(d.leap){tvx=fx*5+inp.x*2;tvz=fz*5+inp.z*2;}
+  if(d.ranged&&!d.back){tvx=inp.x*3;tvz=inp.z*3;}
+  return [tvx,tvz];}
+// ---- zarar yordamchilari ----
+function nhHitArea(x,z,r,dmg,kb,heavy,fn){let n=0;for(const e of enemies){if(e.dead||e.state==='spawn')continue;const dx=e.g.position.x-x,dz=e.g.position.z-z,d=Math.hypot(dx,dz);if(d<r+e.r){const l=d||1;hitEnemy(e,dmg,dx/l,dz/l,kb,heavy,n>0);if(fn)fn(e);n++;}}return n;}
+function nhCone(range,arc,dmg,kb,heavy){const fx=Math.sin(P.face),fz=Math.cos(P.face);let n=0;
+  for(const e of enemies){if(e.dead||e.state==='spawn')continue;const dx=e.g.position.x-P.pos.x,dz=e.g.position.z-P.pos.z,d=Math.hypot(dx,dz);if(d>range+e.r)continue;
+    if(d>.8&&Math.acos(Math.max(-1,Math.min(1,(dx*fx+dz*fz)/d)))>arc)continue;hitEnemy(e,dmg,dx/(d||1),dz/(d||1),kb,heavy,n>0);n++;}return n;}
+function nhTarget(maxD=24){let best=null,bd=maxD;for(const e of enemies){if(e.dead||e.state==='spawn')continue;const d=Math.hypot(e.g.position.x-P.pos.x,e.g.position.z-P.pos.z);if(d<bd){bd=d;best=e;}}return best;}
+function nhAhead(dist){const t=nhTarget(dist+4);if(t)return {x:t.g.position.x,z:t.g.position.z};return {x:P.pos.x+Math.sin(P.face)*dist,z:P.pos.z+Math.cos(P.face)*dist};}
+// ---- snaryadlar ----
+const HPROJ=[],NHZ=[];
+const nhMat={arrow:new THREE.MeshStandardMaterial({color:0x8a6a44,roughness:.6}),ice:new THREE.MeshStandardMaterial({color:0xaee6ff,emissive:0x3ab0ff,emissiveIntensity:1.8,roughness:.1,transparent:true,opacity:.9}),
+  dark:new THREE.MeshBasicMaterial({color:new THREE.Color(1.6,.4,2.6)}),hammer:new THREE.MeshStandardMaterial({color:0x3a3d44,metalness:.8,roughness:.35})};
+const nhGeo={arrow:new THREE.CylinderGeometry(.025,.025,1.1,4).rotateX(PI/2),ice:new THREE.OctahedronGeometry(.28,0).scale(1,1,2.2),dark:new THREE.SphereGeometry(.3,10,8),hammer:new THREE.BoxGeometry(.6,.32,.32)};
+const NHC={arrow:[2.4,1.9,1.2],ice:[.6,1.8,2.8],dark:[1.6,.4,2.6],hammer:[.5,1.6,2.6]};
+function nhProj(kind,ang,dmg,o={}){const m=new THREE.Mesh(nhGeo[kind],nhMat[kind]);const a=P.face+ang;const y=1.35+(P.gh||0);
+  m.position.set(P.pos.x+Math.sin(a)*.8,y,P.pos.z+Math.cos(a)*.8);m.rotation.y=a;scene.add(m);
+  HPROJ.push({m,kind,vx:Math.sin(a),vz:Math.cos(a),sp:o.sp||({arrow:42,ice:30,dark:24,hammer:26}[kind]),dmg,life:o.life||1.1,pierce:o.pierce||(kind==='hammer'?9:0),hit:new Set(),home:o.home||null});}
+function updHProj(dt){for(let i=HPROJ.length-1;i>=0;i--){const p=HPROJ[i],m=p.m;p.life-=dt;
+  if(p.home&&!p.home.dead){const dx=p.home.g.position.x-m.position.x,dz=p.home.g.position.z-m.position.z,d=Math.hypot(dx,dz)||1;p.vx+=(dx/d-p.vx)*Math.min(1,dt*7);p.vz+=(dz/d-p.vz)*Math.min(1,dt*7);const l=Math.hypot(p.vx,p.vz)||1;p.vx/=l;p.vz/=l;m.rotation.y=Math.atan2(p.vx,p.vz);}
+  m.position.x+=p.vx*p.sp*dt;m.position.z+=p.vz*p.sp*dt;if(p.kind==='hammer')m.rotation.x+=dt*18;if(p.kind==='ice')m.rotation.z+=dt*6;
+  const c=NHC[p.kind];if(Math.random()<.85)emit(m.position.x,m.position.y,m.position.z,rnd(-.3,.3),rnd(-.3,.3),rnd(-.3,.3),p.kind==='arrow'?.15:.35,p.kind==='arrow'?.06:.16,c[0],c[1],c[2],0,1);
+  let dead=p.life<=0;
+  if(!dead)for(const e of enemies){if(e.dead||e.state==='spawn'||p.hit.has(e))continue;const dx=e.g.position.x-m.position.x,dz=e.g.position.z-m.position.z;
+    if(dx*dx+dz*dz<(e.r+.55)**2){p.hit.add(e);hitEnemy(e,p.dmg,p.vx,p.vz,p.kind==='hammer'?7:3,false,true);burst(m.position.x,m.position.y,m.position.z,10,5,.35,.1,c[0],c[1],c[2],10);
+      if(p.kind==='ice')e.frozenT=Math.max(e.frozenT||0,.45);if(p.kind==='dark'){e.dotT=3;e.dotD=7;}
+      if(p.pierce--<=0){dead=true;break;}}}
+  if(!dead)for(const o of obstacles){if(o.box||o.plat!==undefined)continue;const dx=m.position.x-o.x,dz=m.position.z-o.z;if(dx*dx+dz*dz<o.r*o.r){dead=true;burst(m.position.x,m.position.y,m.position.z,6,4,.3,.08,c[0],c[1],c[2],8);break;}}
+  if(dead){scene.remove(m);HPROJ.splice(i,1);}}}
+// ---- zonali effektlar (yomg'ir, bo'ron, girdob) ----
+function updNHZ(dt){for(let i=NHZ.length-1;i>=0;i--){const z=NHZ[i];z.t+=dt;z.tick-=dt;const c=z.c;
+  for(let k=0;k<(isTouch?3:6);k++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*z.r;const x=z.x+Math.sin(a)*r,zz=z.z+Math.cos(a)*r;
+    if(z.kind==='rain')emit(x,6,zz,0,-26,0,.25,.07,c[0],c[1],c[2],0,1);else if(z.kind==='blizzard')emit(x,rnd(.5,4),zz,Math.cos(a+z.t)*6,rnd(-1,1),-Math.sin(a+z.t)*6,.5,.12,c[0],c[1],c[2],0,1);
+    else emit(x,rnd(.3,2.5),zz,(z.x-x)*2,rnd(0,2),(z.z-zz)*2,.4,.16,c[0],c[1],c[2],0,1);}
+  if(z.kind==='vortex')for(const e of enemies){if(e.dead||e.tower||e.boss)continue;const p=e.g.position,dx=z.x-p.x,dz=z.z-p.z,d=Math.hypot(dx,dz);if(d<z.r+3&&d>.6){p.x+=dx/d*dt*6;p.z+=dz/d*dt*6;}}
+  if(z.tick<=0){z.tick=z.every;nhHitArea(z.x,z.z,z.r,z.dmg,z.kind==='vortex'?0:1.5,false,z.kind==='blizzard'?(e=>e.frozenT=Math.max(e.frozenT||0,.5)):null);}
+  if(z.t>=z.life){if(z.kind==='vortex'){nhHitArea(z.x,z.z,z.r+1,z.boom,10,true);ring(z.x,z.z,z.r+1,.6,1.6,.5,2.6);burst(z.x,1,z.z,60,12,.8,.14,1.6,.4,2.6,8);shake=Math.max(shake,.5);sfx.boom&&sfx.boom();}NHZ.splice(i,1);}}
+  // dushmanlardagi holatlar: muzlash, la'nat
+  for(const e of enemies){if(e.dead)continue;if(e.dotT>0){e.dotT-=dt;e.dotAcc=(e.dotAcc||0)+e.dotD*dt;if(e.dotAcc>=6){e.hp-=e.dotAcc;dmgText(e.g.position.x,2.4*e.sc,e.g.position.z,Math.round(e.dotAcc),'');e.dotAcc=0;if(e.hp<=0)killEnemy(e,0,0);}
+      if(Math.random()<.3)emit(e.g.position.x+rnd(-.4,.4),rnd(.5,2),e.g.position.z+rnd(-.4,.4),0,1.5,0,.5,.1,1.6,.4,2.6,0,1);}
+    if(e.frozenT>0&&Math.random()<.3)emit(e.g.position.x+rnd(-.5,.5),rnd(.2,2),e.g.position.z+rnd(-.5,.5),0,.6,0,.5,.1,.7,1.8,2.8,0,1);}}
+// ---- qobiliyat bosqichlari ----
+function nhDo(h){const fn=h[1],fx=Math.sin(P.face),fz=Math.cos(P.face),px=P.pos.x,pz=P.pos.z;
+  switch(fn){
+   case 'proj':nhProj(h[2],h[3],h[4]);break;
+   case 'fan':{const n=h[3],sp=h[4];for(let i=0;i<n;i++)nhProj(h[2],(i-(n-1)/2)*sp,h[5]);break;}
+   case 'homing':{const ts=enemies.filter(e=>!e.dead&&e.state!=='spawn').sort((a,b)=>Math.hypot(a.g.position.x-px,a.g.position.z-pz)-Math.hypot(b.g.position.x-px,b.g.position.z-pz)).slice(0,h[2]);
+     if(!ts.length)nhProj('dark',0,h[3]);ts.forEach((t,i)=>nhProj('dark',(i-1)*.5,h[3],{home:t,life:1.6,sp:20}));break;}
+   case 'ring':for(let i=0;i<h[3];i++)nhProj(h[2],i/h[3]*TAU,h[4],{pierce:3,life:.8,sp:18});break;
+   case 'dashHit':P.sk.dashHit=h[2];break;
+   case 'aoe':nhHitArea(px,pz,h[2],h[3],h[4],false);ring(px,pz,h[2],.4,2,1.4,.5);burst(px,1,pz,24,9,.5,.1,2.2,1.6,.6,10);break;
+   case 'slam':nhHitArea(px,pz,h[2],h[3],14,true);ring(px,pz,h[2],.8,2.4,1.2,.3);ring(px,pz,h[2]*.55,.5,2.6,1.6,.5);burst(px,.5,pz,70,14,1,.16,1.4,.9,.5,6,2);shake=Math.max(shake,.75);zoomPunch=Math.max(zoomPunch,.12);hitStop=Math.max(hitStop,.08);sfx.boom&&sfx.boom();break;
+   case 'quake':{const n=nhHitArea(px+fx*3,pz+fz*3,h[2],h[3],12,true,e=>{e.state='stagger';e.t=-.8;});for(let k=1;k<=5;k++)setTimeout(()=>ring(px+fx*k*1.6,pz+fz*k*1.6,1.6+k*.5,.5,2,1.3,.4),k*60);burst(px+fx*2,.4,pz+fz*2,80,14,1,.16,1.2,.8,.4,6,2);shake=Math.max(shake,.85);zoomPunch=Math.max(zoomPunch,.14);sfx.boom&&sfx.boom();break;}
+   case 'thunder':{const ts=enemies.filter(e=>!e.dead&&e.state!=='spawn'&&Math.hypot(e.g.position.x-px,e.g.position.z-pz)<h[2]).slice(0,h[3]);
+     for(const t of ts){const x=t.g.position.x,z=t.g.position.z;for(let k=0;k<14;k++)emit(x+rnd(-.2,.2),k*.6,z+rnd(-.2,.2),rnd(-.5,.5),0,rnd(-.5,.5),.3,.22,1.2,2,3,0,1);ring(x,z,2,.3,1.2,2,3);hitEnemy(t,h[4],0,0,2,true,true);}
+     if(!ts.length)dmgText(px,3,pz,'NISHON YOQ','');sfx.boom&&sfx.boom();break;}
+   case 'nova':nhHitArea(px,pz,h[2],h[3],5,false,e=>e.frozenT=Math.max(e.frozenT||0,h[4]));ring(px,pz,h[2],.6,.7,1.8,2.8);for(let i=0;i<40;i++){const a=i/40*TAU;emit(px,1,pz,Math.sin(a)*12,rnd(0,2),Math.cos(a)*12,.5,.18,.7,1.8,2.8,0,1);}break;
+   case 'spikes':for(let k=1;k<=6;k++)setTimeout(()=>{const x=px+fx*k*h[2]/6*1.2,z=pz+fz*k*h[2]/6*1.2;nhHitArea(x,z,1.6,h[3],4,false,e=>e.frozenT=Math.max(e.frozenT||0,.8));
+       for(let j=0;j<10;j++)emit(x+rnd(-.5,.5),rnd(0,.5),z+rnd(-.5,.5),0,rnd(6,10),0,.4,.16,.7,1.8,2.8,-12,1);ring(x,z,1.4,.3,.7,1.8,2.8);},k*70);break;
+   case 'rain':{const c=nhAhead(9);NHZ.push({kind:'rain',x:c.x,z:c.z,r:h[2],life:h[3],every:.2,tick:0,dmg:h[4]*.5,t:0,c:[2.4,1.9,1.2]});ring(c.x,c.z,h[2],.5,2.4,1.9,1.2);break;}
+   case 'blizzard':{const c=nhAhead(8);NHZ.push({kind:'blizzard',x:c.x,z:c.z,r:h[2],life:h[3],every:.4,tick:0,dmg:h[4],t:0,c:[.8,1.9,2.8]});ring(c.x,c.z,h[2],.6,.8,1.9,2.8);break;}
+   case 'vortex':{const c=nhAhead(8);NHZ.push({kind:'vortex',x:c.x,z:c.z,r:h[2],life:h[3],every:.35,tick:0,dmg:8,boom:h[4],t:0,c:[1.6,.4,2.6]});ring(c.x,c.z,h[2],.6,1.6,.4,2.6);break;}
+  }}
+function updNH(dt,inp){updHProj(dt);updNHZ(dt);if(P.state!=='hsk'||!P.sk)return;const sk=P.sk,d=sk.d;
+  if(sk.slot==='basic'&&d.melee){const t0=d.dur*.35;if(P.prevT<t0&&P.t>=t0){const [rg,arc,dm]=d.melee;const n=nhCone(rg,arc,dm[sk.combo%3],sk.combo===2?7:3.5,sk.combo===2&&d.heavy);
+      const fx=Math.sin(P.face),fz=Math.cos(P.face);burst(P.pos.x+fx*1.6,1.2,P.pos.z+fz*1.6,n?14:5,6,.3,.08,2.2,1.6,.8,12);if(!n)sfx.whoosh&&sfx.whoosh();}}
+  if(d.hits)for(const h of d.hits){const t=h[0]*d.dur/Math.max(d.dur,.001)*1;if(P.prevT<h[0]&&P.t>=h[0])nhDo(h);}
+  if(sk.dashHit&&P.t<.32){for(const e of enemies){if(e.dead||e.state==='spawn'||(sk.hitSet&&sk.hitSet.has(e)))continue;const dx=e.g.position.x-P.pos.x,dz=e.g.position.z-P.pos.z;if(dx*dx+dz*dz<(e.r+1.3)**2){(sk.hitSet=sk.hitSet||new Set()).add(e);hitEnemy(e,sk.dashHit,Math.sin(P.face),Math.cos(P.face),9,true);}}}
+  if(d.leap){const k=Math.min(1,P.t/(d.dur*.58));P.y=Math.sin(k*PI)*d.leap*(k<1?1:0);}
+}
+function nhLabels(){const on=NHcur(),D=nhDef();const set=(id,txt)=>{const el=$(id);if(!el)return;const d=el.firstElementChild;if(!d)return;for(const n of d.childNodes)if(n.nodeType===3){n.textContent=txt;return;}const sp=d.querySelector('span');if(sp)sp.textContent=txt;};
+  set('bA',on?D.basic.n:'ZARBA');set('bS',on?D.s1.n:'AYLANMA');set('bW',on?D.s2.n:'QUROL');const sl=$('superLbl');if(sl&&on)sl.textContent=D.s3.n;
+  if(on){for(const k in MELEE_MESH)MELEE_MESH[k].visible=false;rifle.visible=pistolR.visible=pistolL.visible=flailHandle.visible=ballG.visible=false;for(const l of links)l.visible=false;const el=$('wname');if(el)el.textContent='✦ '+hero.title;}
+  else applyWeaponVis();}
+function nhActive(){try{return NHcur();}catch(e){return false;}}
 function updPlayer(dt){
   for(const k in buf)buf[k]=Math.max(0,buf[k]-dt);
   if(held.attack&&buf.attack<.05)buf.attack=.06;
@@ -2002,7 +2172,8 @@ function updPlayer(dt){
   const st=P.state;
   // transitions
   P.ringCd=(P.ringCd||0)-dt;P.recoil=Math.max(0,(P.recoil||0)-dt*10);
-  if(st==='move'){
+  if(nhActive()){nhTransitions(inp,dt);}
+  else if(st==='move'){
     if(buf.dodge&&P.dodgeCd<=0)startDodge(inp);
     else if(buf.special&&P.rage>=100)startSuper(inp);
     else if(buf.spin&&P.spinCd<=0){P.spinCd=SPIN_CD;if(isGun())gunRing();else if(isSword())startSword(inp,WHIRL);else startSpin(inp);}
@@ -2025,6 +2196,7 @@ function updPlayer(dt){
   // movement
   let tvx=0,tvz=0;const s=P.state;
   if(s==='move'){const sp=P.aiming?5.2:7.4;tvx=inp.x*sp;tvz=inp.z*sp;}
+  else if(s==='hsk'){const r=nhMove(inp);tvx=r[0];tvz=r[1];}
   else if(s==='spin'){tvx=inp.x*3.8;tvz=inp.z*3.8;}
   else if(s==='sw'){const m=P.mv;const fx=Math.sin(P.face),fz=Math.cos(P.face);const l=P.t<m.a1?m.lunge*(1-P.t/m.a1):0;tvx=fx*l+inp.x*1.5;tvz=fz*l+inp.z*1.5;}
   else if(s==='storm'){tvx=inp.x*3.5;tvz=inp.z*3.5;}else if(s==='airstrike'||s==='cast'){tvx=inp.x*2;tvz=inp.z*2;}
@@ -2047,6 +2219,7 @@ function updPlayer(dt){
   }else P.y=Math.max(0,P.y-dt*10);
   if(P.state==='sw')updSword(dt,inp);
   updSuper(dt,inp);
+  if(nhActive())updNH(dt,inp);else if(HPROJ.length||NHZ.length){updHProj(dt);updNHZ(dt);}
   // lava
   P.lavaTick-=dt;
   if(P.y<.1&&s!=='dodge'&&lavaAt(P.pos.x,P.pos.z)&&!onBridge(P.pos.x,P.pos.z)){P.hp-=22*dt;hurtFlash=Math.max(hurtFlash,.35);
@@ -2181,8 +2354,12 @@ function mocapV1(h,pose,gun){
 }
 function mocapApply(h,s,dt){
   if(!window.MOCAP||!h||!h.legs||!h.arms)return;if(!h._v2&&!h._v2fail)upgradeRig(h);const V=h._v2;
+  if(h.pendingProps&&(h._v2||h._v2fail)){for(const [o,sd] of h.pendingProps)h.arms[sd>0?1:0].hand.add(o);h.pendingProps=null;}
   let want='idle',dur=0;const gun=isGun();
-  if(s==='move'){if(MC.hurtT>0&&!gun){want='hit';dur=.42;}else if(gun){const rf=W().id==='rifle';want=P.speed>1.2?(rf?'rrun':'prun'):(rf?'raim':'paim');}else want=P.speed>1.2?'run':'idle';}
+  const lob=!running&&h.lobbyClip;
+  if(lob){want=h.lobbyClip;}
+  else if(s==='hsk'){want=P.sk?P.sk.anim:'idle';dur=P.dur;}
+  else if(s==='move'){if(MC.hurtT>0&&!gun){want='hit';dur=.42;}else if(gun){const rf=W().id==='rifle';want=P.speed>1.2?(rf?'rrun':'prun'):(rf?'raim':'paim');}else want=P.speed>1.2?'run':'idle';}
   else if(s==='atk'){want=['atk0','atk1','atk2'][P.atkType]||'atk0';dur=P.dur;}
   else if(s==='sw'){want=P.mv&&P.mv.kind==='spin'?'spin':['atk0','atk1','atk2'][(P.combo+2)%3];dur=P.dur;}
   else if(s==='spin'){want='spin';dur=P.dur;}
@@ -2192,9 +2369,9 @@ function mocapApply(h,s,dt){
   else if(s==='plasma'||s==='storm'||s==='airstrike'||s==='cast'){want='cast';dur=Math.min(P.dur,1.2);}
   else if(s==='shadow'){want='atk1';dur=.32;}
   MC.hurtT=Math.max(0,MC.hurtT-dt);
-  if(MC.name!==want||(!MCL[want].loop&&P.t<MC.t-.05&&want!=='hit'&&want!=='death'))mcSet(want,dur);
+  if(MC.name!==want||(!lob&&!MCL[want].loop&&P.t<MC.t-.05&&want!=='hit'&&want!=='death'))mcSet(want,dur);
   const cl=MCL[want],c=MOCAP[want];if(!c)return;
-  let u;if(cl.loop){const rate=want==='run'?Math.max(.6,P.speed/7.4)*1.15:1;MC.t+=dt*rate;u=(MC.t%c.dur)/c.dur;}
+  let u;if(cl.loop||lob){const rate=lob?(h.lobbyRate||1):want==='run'?Math.max(.6,P.speed/7.4)*1.15:1;MC.t+=dt*rate;u=(MC.t%c.dur)/c.dur;}
   else{MC.t=want==='death'||want==='hit'?MC.t+dt:P.t;const k=Math.min(1,MC.t/Math.max(.05,MC.dur));u=cl.w[0]+(cl.w[1]-cl.w[0])*k;}
   let pose=mcSample(want,Math.min(.999,Math.max(0,u)));if(!pose||!pose.q.H)return;
   MC.fade=Math.min(1,MC.fade+dt/.12);if(MC.from&&MC.fade<1)pose=mcBlend(MC.from,pose,MC.fade);MC.pose=pose;
@@ -2289,6 +2466,7 @@ function updEnemies(dt){
   const px=P.pos.x,pz=P.pos.z;
   for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];e.t+=dt;const g=e.g,pos=g.position;
     e.flash=Math.max(0,e.flash-dt*5);if(e.tower)continue;e.skin.emissiveIntensity=e.flash*.55;
+    if(e.frozenT>0&&!e.dead&&e.state!=='spawn'){e.frozenT-=dt;continue;}
     // knockback
     pos.x+=e.kx*dt;pos.z+=e.kz*dt;const kd=Math.exp(-dt*7);e.kx*=kd;e.kz*=kd;
     const dx=px-pos.x,dz=pz-pos.z,dist=Math.hypot(dx,dz);
@@ -2529,8 +2707,9 @@ let miniT=0;
 
 const _ohp=new V3();
 function setCd(el,left,total,txt){if(!el)return;const c=el.querySelector('.cd');if(!c)return;if(left>0){const a=left/total*360;c.classList.add('on');c.style.background=`conic-gradient(rgba(0,0,0,.72) ${a}deg,transparent ${a}deg)`;c.textContent=txt??Math.ceil(left);}else{c.classList.remove('on');c.textContent='';}}
-function updSkillHUD(){setCd($('bS'),P.spinCd,SPIN_CD);setCd($('skS'),P.spinCd,SPIN_CD);setCd($('bD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');setCd($('skD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');
-  const ul=100-P.rage;setCd($('bX'),ul,100,Math.floor(P.rage)+'%');setCd($('skX'),ul,100,Math.floor(P.rage)+'%');$('skX').classList.toggle('ready',P.rage>=100);
+function updSkillHUD(){if(nhActive()){const D=nhDef(),f=v=>v>0?v.toFixed(v<10?1:0):'';setCd($('bS'),P.cd1,D.s1.cd,f(P.cd1));setCd($('skS'),P.cd1,D.s1.cd,f(P.cd1));setCd($('bW'),P.cd2,D.s2.cd,f(P.cd2));setCd($('bX'),P.cd3,D.s3.cd,f(P.cd3));setCd($('skX'),P.cd3,D.s3.cd,f(P.cd3));$('skX').classList.toggle('ready',P.cd3<=0);
+    setCd($('bD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');setCd($('skD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');}else{setCd($('bS'),P.spinCd,SPIN_CD);setCd($('skS'),P.spinCd,SPIN_CD);setCd($('bD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');setCd($('skD'),P.dodgeCd,DODGE_CD,P.dodgeCd>0?P.dodgeCd.toFixed(1):'');
+  const ul=100-P.rage;setCd($('bX'),ul,100,Math.floor(P.rage)+'%');setCd($('skX'),ul,100,Math.floor(P.rage)+'%');$('skX').classList.toggle('ready',P.rage>=100);}
   $('lvlB').textContent=P.lvl;$('ohpL').textContent=P.lvl;$('xpf').style.width=(P.lvl>=15?100:P.xp/xpNeed(P.lvl)*100)+'%';
   const o=$('ohp');_ohp.set(P.pos.x,2.55+P.y,P.pos.z).project(camera);if(_ohp.z>1||P.state==='dead'){o.style.display='none';}else{o.style.display='flex';o.style.left=((_ohp.x+1)/2*innerWidth)+'px';o.style.top=((1-_ohp.y)/2*innerHeight)+'px';}
   $('ohpF').style.width=(P.hp/P.maxHp*100)+'%';o.querySelector('b').style.setProperty('--seg',(25/P.maxHp*100)+'%');}
@@ -2711,8 +2890,8 @@ addEventListener('keydown',e=>{if(e.repeat)return;keys[e.code]=true;
   if(e.code==='KeyK'||e.code==='ShiftLeft')buf.spin=.35;
   if(e.code==='Space'){buf.dodge=.3;e.preventDefault();}
   if(e.code==='KeyL')buf.special=.35;
-  if(e.code==='KeyQ'||e.code==='Tab'){setWeapon(curW+1);e.preventDefault();}
-  if(/^Digit[1-8]$/.test(e.code))setWeapon(+e.code.slice(5)-1);
+  if(e.code==='KeyQ'||e.code==='Tab'){if(nhActive())buf.sk2=.35;else setWeapon(curW+1);e.preventDefault();}
+  if(/^Digit[1-8]$/.test(e.code)&&!nhActive())setWeapon(+e.code.slice(5)-1);
   if(e.code==='Escape'||e.code==='KeyP')togglePause();});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyJ'||e.code==='Enter')held.attack=false;});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -2727,7 +2906,7 @@ const joyEnd=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.x=joy.y=0;jk.sty
 joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);
 function bindBtn(id,fn,holdKey){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);el.classList.add('on');fn();if(holdKey)held[holdKey]=true;initAudio();});
   const up=e=>{el.classList.remove('on');if(holdKey)held[holdKey]=false;};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);}
-bindBtn('bW',()=>setWeapon(curW+1));bindBtn('bA',()=>buf.attack=.35,'attack');bindBtn('bS',()=>buf.spin=.35);bindBtn('bD',()=>buf.dodge=.3);bindBtn('bX',()=>buf.special=.35);
+bindBtn('bW',()=>{if(nhActive())buf.sk2=.35;else setWeapon(curW+1);});bindBtn('bA',()=>buf.attack=.35,'attack');bindBtn('bS',()=>buf.spin=.35);bindBtn('bD',()=>buf.dodge=.3);bindBtn('bX',()=>buf.special=.35);
 if(isTouch){document.body.classList.add('touch');$('controls').classList.add('on');setTimeout(joyHome,50);addEventListener('resize',joyHome);}
 $('keys').innerHTML=isTouch?
   '<b>Chap tomon</b><span>Barmoq bilan yurish</span><b>QUROL</b><span>Qurolni almashtirish</span><b>ZARBA</b><span>Gurzi zarbasi (bosib tursang — kombo)</span><b>AYLANMA</b><span>Atrofdagilarni urib aylanish</span><b>QOCHISH</b><span>Dumalab chetlanish</span><b>SUPER</b><span>G\'azab to\'lganda — qahramonning super zarbasi</span>':
@@ -2737,7 +2916,7 @@ if(!isTouch)$('hint').textContent='WASD yurish · J zarba/o\'q · Q qurol · K a
 // ================= GAME FLOW =================
 function resetGame(){
   for(const e of enemies)removeEnemy(e);enemies.length=0;for(const o of orbs)scene.remove(o.m);orbs.length=0;
-  Object.assign(P,{lvl:1,xp:0,dmgMul:1,maxHp:100,spinCd:0,hp:100,rage:0,state:'move',t:0,combo:0,inv:0,y:0,face:PI,deadT:0,dodgeCd:0});P.pos.set(0,0,0);P.vel.set(0,0,0);if(ARENA){P.pos.set(AR.blue.x+12,0,AR.blue.z-12);P.face=PI*.75;arenaSetup();}
+  for(const p_ of HPROJ)scene.remove(p_.m);HPROJ.length=0;NHZ.length=0;Object.assign(P,{cd1:0,cd2:0,cd3:0,lvl:1,xp:0,dmgMul:1,maxHp:100,spinCd:0,hp:100,rage:0,state:'move',t:0,combo:0,inv:0,y:0,face:PI,deadT:0,dodgeCd:0});P.pos.set(0,0,0);P.vel.set(0,0,0);if(ARENA){P.pos.set(AR.blue.x+12,0,AR.blue.z-12);P.face=PI*.75;arenaSetup();}
   hero.body.rotation.set(0,0,0);hero.body.position.set(0,0,0);
   score=0;wave=0;kills=0;comboCount=0;spawnQ=[];waveTimer=1.2;
   hero.root.position.set(0,0,0);hero.root.rotation.y=P.face;ropeReset();
@@ -2852,7 +3031,7 @@ requestAnimationFrame(frame);
 $('goBtn').disabled=false;$('goBtn').textContent='JANGNI BOSHLASH';
 if(FOR){const pp=document.querySelector('#start .panel p');if(pp)pp.textContent="Qahramoningni tanla va qadimiy o'rmonga kir. Daraxtlar orasidan goblinlar, qo'chqorlar va olovli ajdar yopirilib kelmoqda. Zanjirli gurzingni aylantir va ularni to'lqinma-to'lqin yanchib tashla.";}
 document.getElementById('mapSub').textContent=FOR?'QADIMIY O\'RMON':'LAVA XAROBALARI';
-window.__game={AR_T,AR,arenaSetup,get arenaWon(){return arenaWon},get joy(){return joy},PLATS,WALLS,groundH,get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
+window.__game={dbg:{loadB64Model,makeTexTHero,normGeo,firstMesh,HERO_CFG,splitGeo},get HPROJ(){return HPROJ},nhStart,NHS,AR_T,AR,arenaSetup,get arenaWon(){return arenaWon},get joy(){return joy},PLATS,WALLS,groundH,get LAZY_N(){return LAZY.length+":"+lazyBusy},ZONES,RESTS,sfx,MC,killEnemy,get AC(){return AC},BUF,BRIDGES,LMK,heroKey,P,chunks,FOREST,enemies,buf,startGame,TEMPLE,TERRACE,GTREES,spawnEnemy,setHero,get hero(){return hero},get wave(){return wave}};
 </script>
 </body>
 </html>
